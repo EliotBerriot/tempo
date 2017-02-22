@@ -33,6 +33,6 @@ services:
     build:
       context: .
       dockerfile: ./compose/gulp/Dockerfile-dev
-    command: gulp watch
+    command: watch
     volumes:
       - ./tempo/static:/app

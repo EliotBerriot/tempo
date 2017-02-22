@@ -1,8 +1,6 @@
 FROM node:latest
 
-COPY ./package.json /app/package.json
-
 WORKDIR /app
-RUN npm install
+RUN npm install -g gulp
 
-CMD ["gulp"]
+ENTRYPOINT ["gulp", "--gulpfile", "semantic/gulpfile.js"]
