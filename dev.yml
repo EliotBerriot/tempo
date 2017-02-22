@@ -35,4 +35,4 @@ services:
       dockerfile: ./compose/gulp/Dockerfile-dev
     command: gulp watch
     volumes:
-      - .:/app
+      - ./tempo/static:/app
