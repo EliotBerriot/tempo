@@ -19,8 +19,66 @@ var gulp = require('gulp'),
       exec = require('child_process').exec,
       runSequence = require('run-sequence'),
       browserSync = require('browser-sync').create(),
-      reload = browserSync.reload;
+      reload = browserSync.reload,
+      semanticConfig       = require('./tempo/static/semantic/tasks/config/user'),
+      // watch changes
+      semanticWatch        = require('./tempo/static/semantic/tasks/watch'),
 
+      // build all files
+      semanticBuild        = require('./tempo/static/semantic/tasks/build'),
+      semanticBuildJS      = require('./tempo/static/semantic/tasks/build/javascript'),
+      semanticBuildCSS     = require('./tempo/static/semantic/tasks/build/css'),
+      semanticBuildAssets  = require('./tempo/static/semantic/tasks/build/assets'),
+
+      // utility
+      semanticClean        = require('./tempo/static/semantic/tasks/clean'),
+      semanticVersion      = require('./tempo/static/semantic/tasks/version'),
+
+      // docs tasks
+      semanticServeDocs    = require('./tempo/static/semantic/tasks/docs/serve'),
+      semanticBuildDocs    = require('./tempo/static/semantic/tasks/docs/build'),
+
+      // rtl
+      semanticBuildRTL     = require('./tempo/static/semantic/tasks/rtl/build'),
+      semanticWatchRTL     = require('./tempo/static/semantic/tasks/rtl/watch')
+      ;
+
+
+        /*******************************
+                   Tasks
+      *******************************/
+
+      gulp.task('semantic-watch', 'Watch for site/theme changes', semanticWatch);
+
+      gulp.task('semantic-build', 'Builds all files from source', semanticBuild);
+      gulp.task('semantic-build-javascript', 'Builds all javascript from source', semanticBuildJS);
+      gulp.task('semantic-build-css', 'Builds all css from source', semanticBuildCSS);
+      gulp.task('semantic-build-assets', 'Copies all assets from source', semanticBuildAssets);
+
+      gulp.task('semantic-clean', 'Clean dist folder', semanticClean);
+      gulp.task('semantic-version', 'Displays current version of Semantic', semanticVersion);
+
+      /*--------------
+            Docs
+      ---------------*/
+
+      /*
+        Lets you serve files to a local documentation instance
+        https://github.com/Semantic-Org/Semantic-UI-Docs/
+      */
+
+      gulp.task('semantic-serve-docs', 'Serve file changes to SUI Docs', semanticServeDocs);
+      gulp.task('semantic-build-docs', 'Build all files and add to SUI Docs', semanticBuildDocs);
+
+
+      /*--------------
+            RTL
+      ---------------*/
+
+      if(semanticConfig.rtl) {
+        gulp.task('semantic-watch-rtl', 'Watch files as RTL', semanticWatchRTL);
+        gulp.task('semantic-build-rtl', 'Build all files as RTL', semanticBuildRTL);
+      }
 
 // Relative paths function
 var pathsConfig = function (appName) {
@@ -100,5 +158,5 @@ gulp.task('watch', function() {
 
 // Default task
 gulp.task('default', function() {
-    runSequence(['styles', 'scripts', 'imgCompression'], 'runServer', 'browserSync', 'watch');
+    runSequence(['styles', 'scripts', 'imgCompression'], 'runServer', 'browserSync', 'semantic-watch', 'watch');
 });
