@@ -14,6 +14,11 @@ templates_patterns = [
 ]
 urlpatterns = [
     url(
+        r'^timeline$',
+        view=views.Timeline.as_view(),
+        name='timeline'
+    ),
+    url(
         r'^templates/',
         include(templates_patterns, namespace='templates'),
     ),

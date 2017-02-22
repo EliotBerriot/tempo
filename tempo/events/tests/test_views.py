@@ -34,3 +34,20 @@ class TestEvent(TestCase):
         self.assertEqual(template.default_value, payload['default_value'])
         self.assertEqual(template.required_value, payload['required_value'])
         self.assertEqual(template.display_template, payload['display_template'])
+
+    def test_user_timeline(self):
+        e1 = factories.Event()
+        e2 = factories.Event(
+            user=e1.user,
+        )
+        e3 = factories.Event(
+            user=e1.user,
+        )
+
+        url = self.reverse('events:timeline')
+        with self.login(e1.user):
+            response = self.get(
+                url,)
+
+        expected = [e3, e2, e1]
+        self.assertEqual(list(response.context['events']), expected)

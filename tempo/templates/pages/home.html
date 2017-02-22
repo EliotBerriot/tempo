@@ -1,1 +1,75 @@
 {% extends "base.html" %}
+
+{% block content %}
+
+<div class="ui vertical segment">
+    <div class="ui text container">
+        <h1 class="ui header">Welcome to Tempo</h1>
+        <p>Tempo is your personal log, a place where you can easily store events that happens to you.</p>
+        <p>Wether you're on a new diet and want to keep a track of how much calories you get, want to quit smoking or track how much you spend, Tempo can help you gather important data and analyze it.</p>
+        <a class="ui primary button" href="{% url 'account_signup' %}">
+            Get started
+            <i class="right arrow icon"></i>
+        </a>
+    </div>
+</div>
+<div class="ui vertical stripe segment">
+    <div class="ui grid container">
+        <div class="ui centered grid stackable">
+            <div class="column five wide">
+                <h3 class="ui header">
+                  <i class="icon cloud upload"></i>
+                  <div class="content">
+                    Gather
+                  </div>
+                </h3>
+                <p>Send your events to Tempo and browse them using the timeline or our built-in search and tagging functions.</p>
+                <p>This is really easy, and accessible from any device, from your smartphone to your desktop computer.</p>
+            </div>
+            <div class="column five wide">
+                <h3 class="ui header">
+                  <i class="icon search"></i>
+                  <div class="content">
+                    Analyze
+                  </div>
+                </h3>
+                <p>Better understand what happens in your life: Ever wanted to know how much cigarettes you smoke each week? How much time you spend in transports? How often you are sick?</p>
+                <p>Tempo makes it possible to track such events and run queries against the data.</p>
+            </div>
+            <div class="column five wide">
+                <h3 class="ui header">
+                  <i class="icon share"></i>
+                  <div class="content">
+                    Share
+                  </div>
+                </h3>
+                <p>Give access to your events and statistics to anybody thanks to our powerful sharing features.</p>
+            </div>
+      </div>
+        <div class="ui centered grid stackable">
+            <div class="column six wide">
+                <h3 class="ui header">
+                  <i class="icon code"></i>
+                  <div class="content">
+                    Open Source and Free
+                  </div>
+                </h3>
+                <p>Tempo is fully open-source and free, as in free speech and free beer!</p>
+                <p>This means you can hack it, host it on your own infrastructure and protect. You don't have to trust anybody else for the safety and the privacy of your data.</p>
+            </div>
+            <div class="column six wide">
+                <h3 class="ui header">
+                  <i class="icon plug"></i>
+                  <div class="content">
+                    Integrations
+                  </div>
+                </h3>
+                <p>Easily gather data from other sources and applications or send events to third-party services.</p>
+
+            </div>
+      </div>
+    </div>
+
+</div>
+
+{% endblock %}

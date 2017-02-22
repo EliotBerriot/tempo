@@ -30,11 +30,12 @@ class Template(models.Model):
     required_value = models.BooleanField(default=True)
     value_type = models.CharField(
         max_length=50, choices=VALUE_TYPE_CHOICES, null=True, blank=True)
-    description = models.TextField(
-        default='{user} added event {name} with value {value}',
-    )
+    description = models.TextField(null=True, blank=True)
     creation_date = models.DateTimeField(default=timezone.now)
-    display_template = models.TextField()
+    display_template = models.TextField(
+        null=True,
+        blank=True,
+    )
     created_by = models.ForeignKey(
         User,
         related_name='added_templates',
@@ -42,6 +43,12 @@ class Template(models.Model):
         blank=True)
 
     users = models.ManyToManyField(User, related_name='templates')
+
+    class Meta:
+        ordering = ('-creation_date', )
+
+    def __str__(self):
+        return self.verbose_name
 
     def save(self, **kwargs):
         if not self.slug:
@@ -65,7 +72,19 @@ class Template(models.Model):
         return self.default_value
 
     def get_display_text(self, user_string, value):
-        return self.display_template.format(user=user_string, value=value)
+        template = (
+            self.display_template or
+            '{user} added event "{name}" with value {value}'
+        )
+        return template.format(
+            user=user_string,
+            name=self.verbose_name,
+            value=value)
+
+    def format_value(self, value):
+        if self.value_type == 'integer':
+            return int(value)
+        return value
 
 
 class Event(models.Model):
@@ -87,6 +106,9 @@ class Event(models.Model):
         unique=True,
     )
 
+    class Meta:
+        ordering = ('-time', )
+
     def save(self, **kwargs):
         if not self.pk and self.value is None:
             self.value = self.template.get_default_value()
@@ -99,6 +121,12 @@ class Event(models.Model):
         if self.template.required_value and self.value is None:
             raise ValidationError('Value is required')
 
+    @property
+    def formatted_value(self):
+        if self.value:
+            return self.template.format_value(self.value)
+        return
+
     def display_text(self, owner=True):
         if owner:
             user = 'you'
@@ -106,4 +134,4 @@ class Event(models.Model):
             user = self.user.username
 
         return self.template.get_display_text(
-            user_string=user, value=self.value)
+            user_string=user, value=self.formatted_value)

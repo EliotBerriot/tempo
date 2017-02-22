@@ -5,6 +5,15 @@ from django.core import urlresolvers
 from . import forms
 
 
+class Timeline(LoginRequiredMixin, generic.TemplateView):
+    template_name = 'events/timeline.html'
+
+    def get_context_data(self):
+        context = super().get_context_data()
+        context['events'] = self.request.user.events.all()
+        return context
+
+
 class TemplateCreate(LoginRequiredMixin, generic.CreateView):
     form_class = forms.TemplateCreateForm
     template_name = 'events/templates/create.html'

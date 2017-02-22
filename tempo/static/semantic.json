@@ -17,7 +17,7 @@
   },
   "permission": false,
   "autoInstall": false,
-  "rtl": "both",
+  "rtl": "left",
   "components": [
     "reset",
     "site",
