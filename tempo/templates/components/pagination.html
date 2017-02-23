@@ -1,0 +1,29 @@
+{% load utils i18n %}
+
+<div class="ui pagination menu">
+    {% if has_previous %}
+
+       <a class="ui item" href="?{% query_transform request page=previous %}">{% trans 'previous' %}</a>
+
+    {% endif %}
+
+    {% if show_first %}
+       <a class="ui item" href="?{% query_transform request page=1 %}">1</a>
+       <a class="ui item disabled">&hellip;</a>
+    {% endif %}
+    {% for linkpage in page_numbers %}
+       {% ifequal linkpage page %}
+          <a class="ui item active" href="">{{ page }}</a>
+       {% else %}
+          <a class="ui item" href="?{% query_transform request page=linkpage %}"
+                >{{ linkpage }}</a>
+       {% endifequal %}
+    {% endfor %}
+    {% if show_last %}
+       <a class="ui item disabled">&hellip;</a>
+       <a class="ui item" href="?{% query_transform request page=paginator.num_pages %}">{{ pages }}</a>
+    {% endif %}
+    {% if has_next %}
+       <a class="ui item" href="?{% query_transform request page=next %}">{% trans 'next' %}</a>
+    {% endif %}
+</div>

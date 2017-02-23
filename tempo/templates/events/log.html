@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="ui text container">
+    <div class="ui centered segment">
+        {% for day, entries in days %}
+            <div class="ui horizontal divider">
+                {{ day }}
+            </div>
+            {% for entry in entries %}
+                <div class="ui vertical items">
+                    <div class="ui vertical item">
+                        <i class="ui image icon plus"></i>
+                        <div class="content">
+                            <p>{{ entry.display_text }}</p>
+                            <div class="ui label">
+                                <i class="time icon"></i>
+                                {{ entry.start.time }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+    {% if is_paginated %}{% load paginator %}{% paginator %}{% endif %}
+</div>
+{% endblock %}

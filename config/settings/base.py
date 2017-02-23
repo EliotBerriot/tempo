@@ -59,6 +59,7 @@ LOCAL_APPS = [
     # custom users app
     'tempo.users.apps.UsersConfig',
     # Your stuff: custom apps go here
+    'tempo.common',
     'tempo.events',
 ]
 

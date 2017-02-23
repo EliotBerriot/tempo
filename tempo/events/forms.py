@@ -3,9 +3,9 @@ from django import forms
 from . import models
 
 
-class TemplateCreateForm(forms.ModelForm):
+class EventCreateForm(forms.ModelForm):
     class Meta:
-        model = models.Template
+        model = models.Event
         fields = (
             'verbose_name',
             'description',

@@ -7,9 +7,9 @@ from . import factories
 
 
 class TestEvent(TestCase):
-    def test_can_create_event_type(self):
+    def test_can_create_event(self):
 
-        t = models.Template.objects.create(
+        event = models.Event.objects.create(
             slug='smoked',
             verbose_name='Smoked a cigarette',
             value_type='integer',
@@ -18,48 +18,49 @@ class TestEvent(TestCase):
             display_template='{user} smoked {value} cigarette(s)',
         )
         u = self.make_user()
-        u.templates.add(t)
-
-        e = models.Event.objects.create(
-            template=t,
+        config = event.configs.create(
             user=u,
-            time=timezone.now(),
+        )
+
+        entry = models.Entry.objects.create(
+            config=config,
+            start=timezone.now(),
             comment='Just smoked one, bad idea...',
             detail_url=None,
         )
 
-        self.assertEqual(e.value, 1)
+        self.assertEqual(entry.value, 1)
         self.assertEqual(
-            e.display_text(),
+            entry.display_text(),
             'you smoked 1 cigarette(s)')
 
     def test_can_autopopulate_slug_from_verbose_name(self):
-        t = factories.Template(
+        event = factories.Event(
             verbose_name='Hello world',
         )
-        self.assertEqual(t.slug, 'hello-world')
+        self.assertEqual(event.slug, 'hello-world')
 
     def test_can_deduplicate_slug(self):
-        t1 = factories.Template(
+        event1 = factories.Event(
             verbose_name='Hello world',
         )
-        self.assertEqual(t1.slug, 'hello-world')
+        self.assertEqual(event1.slug, 'hello-world')
 
-        t2 = factories.Template(
+        event2 = factories.Event(
             verbose_name='Hello world',
         )
-        self.assertEqual(t2.slug, 'hello-world-1')
+        self.assertEqual(event2.slug, 'hello-world-1')
 
     def test_can_require_value(self):
 
-        allow_empty = factories.Event(
-            template__required_value=False,
-            template__default_value=None,
+        allow_empty = factories.Entry(
+            config__event__required_value=False,
+            config__event__default_value=None,
             value=None
         )
         with self.assertRaises(ValidationError):
-            factories.Event(
-                template__required_value=True,
-                template__default_value=None,
+            factories.Entry(
+                config__event__required_value=True,
+                config__event__default_value=None,
                 value=None
             )

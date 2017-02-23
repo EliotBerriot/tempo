@@ -7,7 +7,7 @@ from . import factories
 
 
 class TestEvent(TestCase):
-    def test_can_create_template(self):
+    def test_can_create_event(self):
         user = self.make_user()
         payload = {
             'verbose_name': 'My Template',
@@ -18,36 +18,36 @@ class TestEvent(TestCase):
             'description': 'This is my first template',
             'display_template': 'Nope',
         }
-        url = self.reverse('events:templates:create')
+        url = self.reverse('events:events:create')
         with self.login(user):
             response = self.post(
                 url,
                 data=payload,
             )
-        template = user.templates.latest('id')
+        events = user.events.latest('id')
 
-        self.assertEqual(template.created_by, user)
-        self.assertEqual(template.verbose_name, payload['verbose_name'])
-        self.assertEqual(template.description, payload['description'])
-        self.assertEqual(template.is_public, payload['is_public'])
-        self.assertEqual(template.value_type, payload['value_type'])
-        self.assertEqual(template.default_value, payload['default_value'])
-        self.assertEqual(template.required_value, payload['required_value'])
-        self.assertEqual(template.display_template, payload['display_template'])
+        self.assertEqual(events.created_by, user)
+        self.assertEqual(events.verbose_name, payload['verbose_name'])
+        self.assertEqual(events.description, payload['description'])
+        self.assertEqual(events.is_public, payload['is_public'])
+        self.assertEqual(events.value_type, payload['value_type'])
+        self.assertEqual(events.default_value, payload['default_value'])
+        self.assertEqual(events.required_value, payload['required_value'])
+        self.assertEqual(events.display_template, payload['display_template'])
 
     def test_user_timeline(self):
-        e1 = factories.Event()
-        e2 = factories.Event(
-            user=e1.user,
+        e1 = factories.Entry()
+        e2 = factories.Entry(
+            config__user=e1.config.user,
         )
-        e3 = factories.Event(
-            user=e1.user,
+        e3 = factories.Entry(
+            config__user=e1.config.user,
         )
 
-        url = self.reverse('events:timeline')
-        with self.login(e1.user):
+        url = self.reverse('events:log')
+        with self.login(e1.config.user):
             response = self.get(
                 url,)
 
         expected = [e3, e2, e1]
-        self.assertEqual(list(response.context['events']), expected)
+        self.assertEqual(list(response.context['entries']), expected)

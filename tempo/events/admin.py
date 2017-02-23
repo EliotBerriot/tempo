@@ -3,8 +3,8 @@ from django.contrib import admin
 from . import models
 
 
-@admin.register(models.Template)
-class TemplateAdmin(admin.ModelAdmin):
+@admin.register(models.Event)
+class EventAdmin(admin.ModelAdmin):
     list_display = [
         'verbose_name',
         'code',
@@ -24,22 +24,51 @@ class TemplateAdmin(admin.ModelAdmin):
     ]
 
 
-@admin.register(models.Event)
-class TemplateAdmin(admin.ModelAdmin):
+@admin.register(models.EventConfig)
+class EventConfigAdmin(admin.ModelAdmin):
     list_display = [
-        'template',
+        'event',
         'user',
-        'value',
-        'time',
+        'creation_date',
     ]
 
     search_fields = [
-        'template__verbose_name',
-        'template__code',
-        'template__description',
+        'event__verbose_name',
+        'event__code',
+        'event__description',
+        'user__username',
+    ]
+
+    raw_id_fields = [
+        'event',
+        'user',
     ]
 
     list_select_related = [
         'user',
-        'template',
+        'event',
+    ]
+
+
+@admin.register(models.Entry)
+class EntryAdmin(admin.ModelAdmin):
+    list_display = [
+        'config',
+        'value',
+        'start',
+    ]
+
+    search_fields = [
+        'config__event__verbose_name',
+        'config__event__code',
+        'config__event__description',
+    ]
+
+    list_select_related = [
+        'config__user',
+        'config__event',
+    ]
+
+    raw_id_fields = [
+        'config',
     ]

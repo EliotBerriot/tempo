@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from tempo.users.models import User
 
 
-class Template(models.Model):
+class Event(models.Model):
     code = models.CharField(max_length=200, db_index=True)
     slug = models.CharField(max_length=200, db_index=True, unique=True)
     verbose_name = models.CharField(max_length=200)
@@ -38,11 +38,14 @@ class Template(models.Model):
     )
     created_by = models.ForeignKey(
         User,
-        related_name='added_templates',
+        related_name='added_events',
         null=True,
         blank=True)
 
-    users = models.ManyToManyField(User, related_name='templates')
+    users = models.ManyToManyField(
+        User,
+        related_name='events',
+        through='EventConfig')
 
     class Meta:
         ordering = ('-creation_date', )
@@ -60,7 +63,7 @@ class Template(models.Model):
         def unique_check(text, uids):
             if text in uids:
                 return False
-            return not Template.objects.filter(slug=text).exists()
+            return not Event.objects.filter(slug=text).exists()
 
         return slugify.UniqueSlugify(
             unique_check=unique_check,
@@ -74,7 +77,7 @@ class Template(models.Model):
     def get_display_text(self, user_string, value):
         template = (
             self.display_template or
-            '{user} added event "{name}" with value {value}'
+            '{user} added entry "{name}" with value {value}'
         )
         return template.format(
             user=user_string,
@@ -87,16 +90,31 @@ class Template(models.Model):
         return value
 
 
-class Event(models.Model):
-    template = models.ForeignKey(Template, related_name='events')
-    user = models.ForeignKey(User, related_name='events')
+class EventConfig(models.Model):
+    event = models.ForeignKey(
+        Event,
+        related_name='configs',
+    )
+    user = models.ForeignKey(
+        User,
+        related_name='event_configs',
+    )
+    creation_date = models.DateTimeField(default=timezone.now)
+
+
+class Entry(models.Model):
+    config = models.ForeignKey(
+        EventConfig,
+        related_name='entries',
+    )
     is_public = models.BooleanField(default=False)
     value = models.DecimalField(
         max_digits=20,
         decimal_places=10,
         null=True,
         blank=True)
-    time = models.DateTimeField(default=timezone.now, db_index=True)
+    start = models.DateTimeField(default=timezone.now, db_index=True)
+    end = models.DateTimeField(null=True, blank=True, db_index=True)
     comment = models.TextField(null=True, blank=True)
     detail_url = models.URLField(null=True, blank=True)
     uuid = models.UUIDField(
@@ -107,24 +125,24 @@ class Event(models.Model):
     )
 
     class Meta:
-        ordering = ('-time', )
+        ordering = ('-start', )
 
     def save(self, **kwargs):
         if not self.pk and self.value is None:
-            self.value = self.template.get_default_value()
+            self.value = self.config.event.get_default_value()
 
         self.clean()
         return super().save(**kwargs)
 
     def clean(self):
         super().clean()
-        if self.template.required_value and self.value is None:
+        if self.config.event.required_value and self.value is None:
             raise ValidationError('Value is required')
 
     @property
     def formatted_value(self):
         if self.value:
-            return self.template.format_value(self.value)
+            return self.config.event.format_value(self.value)
         return
 
     def display_text(self, owner=True):
@@ -133,5 +151,5 @@ class Event(models.Model):
         else:
             user = self.user.username
 
-        return self.template.get_display_text(
+        return self.config.event.get_display_text(
             user_string=user, value=self.formatted_value)

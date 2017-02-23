@@ -5,21 +5,21 @@ from django.conf.urls import url, include
 
 from . import views
 
-templates_patterns = [
+events_patterns = [
     url(
         regex=r'^create$',
-        view=views.TemplateCreate.as_view(),
+        view=views.EventCreate.as_view(),
         name='create'
     ),
 ]
 urlpatterns = [
     url(
-        r'^timeline$',
-        view=views.Timeline.as_view(),
-        name='timeline'
+        r'^log$',
+        view=views.Log.as_view(),
+        name='log'
     ),
     url(
-        r'^templates/',
-        include(templates_patterns, namespace='templates'),
+        r'^events/',
+        include(events_patterns, namespace='events'),
     ),
 ]
