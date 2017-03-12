@@ -16,6 +16,7 @@
     {% block css %}
     <!-- Latest compiled and minified Bootstrap 4 Alpha 4 CSS -->
     <link rel="stylesheet" href="{% static 'semantic/dist/semantic.min.css' %}" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'vendor/calendar.min.css' %}" crossorigin="anonymous">
 
     <!-- Your stuff: Third-party CSS libraries go here -->
     {% compress css %}
@@ -49,6 +50,9 @@
         {% block javascript %}
           <!-- Required by Bootstrap v4 Alpha 4 -->
           <script src="{% static 'vendor/jquery.min.js' %}" crossorigin="anonymous"></script>
+          <script src="{% static 'semantic/dist/semantic.min.js' %}" crossorigin="anonymous"></script>
+          <script src="{% static 'vendor/calendar.min.js' %}" crossorigin="anonymous"></script>
+          <script src="{% static 'vendor/vue.js' %}" crossorigin="anonymous"></script>
 
           <!-- Your stuff: Third-party javascript libraries go here -->
 

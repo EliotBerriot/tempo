@@ -9,9 +9,15 @@ class EventCreateForm(forms.ModelForm):
         fields = (
             'verbose_name',
             'description',
-            'value_type',
+        )
+
+
+class EntryCreateForm(forms.ModelForm):
+    class Meta:
+        model = models.Entry
+        fields = (
+            'config',
+            'comment',
+            'detail_url',
             'is_public',
-            'required_value',
-            'default_value',
-            'display_template',
         )

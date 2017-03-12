@@ -49,9 +49,12 @@ DJANGO_APPS = [
 ]
 THIRD_PARTY_APPS = [
     'crispy_forms',  # Form layouts
+    'crispy_forms_semantic_ui',
     'allauth',  # registration
     'allauth.account',  # registration
     'allauth.socialaccount',  # registration
+    'taggit',
+    'rest_framework',
 ]
 
 # Apps specific for this project go here.
@@ -174,6 +177,10 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 # Your stuff: custom template context processors go here
             ],
+            'builtins': [
+                'django.contrib.staticfiles.templatetags.staticfiles',
+                'django.templatetags.i18n',
+            ],
         },
     },
 ]
@@ -269,3 +276,8 @@ ADMIN_URL = r'^admin/'
 
 # Your common stuff: Below this line define 3rd party library settings
 # ------------------------------------------------------------------------------
+
+CRISPY_TEMPLATE_PACK = 'semantic-ui'
+CRISPY_ALLOWED_TEMPLATE_PACKS = ['semantic-ui']
+
+TAGGIT_CASE_INSENSITIVE = True

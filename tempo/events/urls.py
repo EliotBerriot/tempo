@@ -12,6 +12,13 @@ events_patterns = [
         name='create'
     ),
 ]
+entries_patterns = [
+    url(
+        regex=r'^create$',
+        view=views.EntryCreate.as_view(),
+        name='create'
+    ),
+]
 urlpatterns = [
     url(
         r'^log$',
@@ -21,5 +28,9 @@ urlpatterns = [
     url(
         r'^events/',
         include(events_patterns, namespace='events'),
+    ),
+    url(
+        r'^entries/',
+        include(entries_patterns, namespace='entries'),
     ),
 ]

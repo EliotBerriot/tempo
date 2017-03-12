@@ -19,6 +19,7 @@ urlpatterns = [
     url(r'^users/', include('tempo.users.urls', namespace='users')),
     url(r'^events/', include('tempo.events.urls', namespace='events')),
     url(r'^accounts/', include('allauth.urls')),
+    url(r'^api/', include('config.api_urls', namespace='api')),
 
     # Your stuff: custom urls includes go here
 

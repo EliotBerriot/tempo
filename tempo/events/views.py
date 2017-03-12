@@ -4,9 +4,16 @@ from django.views import generic
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core import urlresolvers, paginator
 from django import http
+from django.db.models import Q
+
+from rest_framework import viewsets
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.views import APIView
 
 from . import forms
 from . import models
+from . import serializers
 
 
 class Log(LoginRequiredMixin, generic.TemplateView):
@@ -49,3 +56,77 @@ class EventCreate(LoginRequiredMixin, generic.CreateView):
         form.instance.configs.create(
             user=self.request.user)
         return r
+
+
+class EntryCreate(LoginRequiredMixin, generic.TemplateView):
+    template_name = 'events/entries/create.html'
+
+
+class Search(APIView):
+
+    config = {
+        'config': {
+            'qs': models.EventConfig.objects.select_related('event'),
+            'user_attr': 'user',
+            'search_fields': ['event__verbose_name'],
+            'title_field': 'title',
+        }
+    }
+
+    def get(self, request, format=None):
+        t = request.GET['type']
+        query = request.GET['q']
+        results = self.get_results(request, t, query)
+        return Response({'results': self.serialize_results(results)})
+
+    def get_results(self, request, t, query):
+        conf = self.config[t]
+        lookups = {
+            '{}'.format(conf['user_attr']): request.user,
+        }
+        q = None
+        for f in conf['search_fields']:
+            _q = Q(**{'{}__icontains'.format(f): query})
+            if not q:
+                q = _q
+            else:
+                q |= _q
+
+        return conf['qs'].filter(**lookups).filter(q)
+
+    def serialize_results(self, qs):
+        return [
+            {'value': i.pk, 'name': i.title, 'text': i.title}
+            for i in qs
+        ]
+
+
+class EntryViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.EntrySerializer
+
+    def get_queryset(self):
+        return self.request.user.entries.all()
+
+
+class ConfigViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.ConfigSerializer
+
+    def get_queryset(self):
+        return self.request.user.event_configs.all()
+
+    def create(self, request, *args, **kwargs):
+        serializer = serializers.EventSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        event = serializer.instance
+        event.created_by = request.user
+        event.save()
+
+        config = models.EventConfig.objects.create(
+            event=event,
+            user=request.user
+        )
+        serializer = self.get_serializer(instance=config)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

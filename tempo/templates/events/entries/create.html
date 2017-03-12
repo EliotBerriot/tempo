@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+    <div class="ui container">
+        <div id="entry-form">
+            <form class="ui form" v-on:submit.prevent="submit">
+                <div class="field">
+                    <label>Event</label>
+                    <search-input :url="configSearchUrl"></search-input>
+                </div>
+                <div class="field">
+                    <datetime-calendar @record-start="recordStart" @record-end="recordEnd" ></datetime-calendar>
+                </div>
+                <div class="field">
+                    <label>Comment</label>
+                    <textarea name="comment" v-model="comment" placeholder="input your comment here..."></textarea>
+                </div>
+                <div class="field">
+                    <label>URL</label>
+                    <input name="comment" placeholder="input your comment here...">
+                </div>
+                <div class="field">
+                    <div class="ui checkbox">
+                      <input tabindex="0" class="hidden" type="checkbox">
+                      <label>I agree to the Terms and Conditions</label>
+                    </div>
+                </div>
+                <button class="ui button">Submit</button>
+            </form>
+        </div>
+    </div>
+    <script type="text/x-template" id="search-input-template">
+        <div class="ui search selection dropdown">
+            <input type="hidden">
+            <input class="search" type="text">
+            <i class="search icon"></i>
+            <div class="default text">Select event...</div>
+        </div>
+    </script>
+    <script type="text/x-template" id="datetime-calendar-template">
+        <div class="two fields">
+          <div class="field">
+            <label>Start</label>
+            <div class="ui calendar rangestart">
+              <div class="ui input left icon">
+                <i class="calendar icon"></i>
+                <input type="text" placeholder="Start">
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label>End</label>
+            <div class="ui calendar rangeend">
+              <div class="ui input left icon">
+                <i class="calendar icon"></i>
+                <input type="text" placeholder="End">
+              </div>
+            </div>
+          </div>
+        </div>
+    </script>
+{% endblock %}
+
+{% block javascript %}
+    {{ block.super }}
+    <script type="text/javascript">
+        Vue.component('search-input', {
+            template: '#search-input-template',
+
+            props: {
+                url: {type: String}
+            },
+            mounted: function () {
+                var vm = this
+                $(this.$el).dropdown({
+                    apiSettings: {
+                        url: vm.url
+                    },
+                    saveRemoteData: false,
+                }).on('change', function () {
+                    vm.$emit('input', $(vm.$el).dropdown('get value'))
+                });
+            },
+        });
+        Vue.component('datetime-calendar', {
+            template: '#datetime-calendar-template',
+
+            mounted: function () {
+                var vm = this
+                let start = $(this.$el).find('.rangestart')
+                let end = $(this.$el).find('.rangeend')
+                start.calendar({
+                  type: 'datetime',
+                  endCalendar: end,
+                  onChange: function(date, text, mode) {
+                      vm.$emit('record-start', date)
+                  },
+              });
+                end.calendar({
+                  type: 'datetime',
+                  startCalendar: start,
+                  onChange: function(date, text, mode) {
+                      vm.$emit('record-end', date)
+                  },
+              });
+            },
+        });
+        new Vue({
+            el: '#entry-form',
+            delimiters: ['[[', ']]'],
+            data:  {
+                configSearchUrl: '/api/v1/search?q={query}&type=config',
+                start: null,
+                end: null,
+                comment: 'trest2',
+                detailUrl: null,
+                event: null,
+            },
+            methods: {
+                recordStart: function(value){
+                    this.start = value;
+                },
+                recordEnd: function(value){
+                    this.end = value;
+                },
+                submit: function(){
+                    console.log('yolo', this.start, this.end, this.comment)
+                }
+            }
+        })
+    </script>
+{% endblock javascript %}

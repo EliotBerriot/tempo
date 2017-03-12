@@ -1,9 +1,15 @@
 import uuid
 import slugify
+import re
 
 from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.utils.translation import ugettext_lazy as _
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+from taggit.managers import TaggableManager
 
 from tempo.users.models import User
 
@@ -12,30 +18,14 @@ class Event(models.Model):
     code = models.CharField(max_length=200, db_index=True)
     slug = models.CharField(max_length=200, db_index=True, unique=True)
     verbose_name = models.CharField(max_length=200)
-    is_public = models.BooleanField(default=False)
     uuid = models.UUIDField(
         default=uuid.uuid4,
         editable=False,
         db_index=True,
         unique=True,
     )
-    VALUE_TYPE_CHOICES = [
-        ('integer', 'integer'),
-    ]
-    default_value = models.DecimalField(
-        max_digits=20,
-        decimal_places=10,
-        null=True,
-        blank=True)
-    required_value = models.BooleanField(default=True)
-    value_type = models.CharField(
-        max_length=50, choices=VALUE_TYPE_CHOICES, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     creation_date = models.DateTimeField(default=timezone.now)
-    display_template = models.TextField(
-        null=True,
-        blank=True,
-    )
     created_by = models.ForeignKey(
         User,
         related_name='added_events',
@@ -71,24 +61,6 @@ class Event(models.Model):
             max_length=190,
         )(self.verbose_name)
 
-    def get_default_value(self):
-        return self.default_value
-
-    def get_display_text(self, user_string, value):
-        template = (
-            self.display_template or
-            '{user} added entry "{name}" with value {value}'
-        )
-        return template.format(
-            user=user_string,
-            name=self.verbose_name,
-            value=value)
-
-    def format_value(self, value):
-        if self.value_type == 'integer':
-            return int(value)
-        return value
-
 
 class EventConfig(models.Model):
     event = models.ForeignKey(
@@ -100,6 +72,20 @@ class EventConfig(models.Model):
         related_name='event_configs',
     )
     creation_date = models.DateTimeField(default=timezone.now)
+    is_public = models.BooleanField(default=False)
+
+    def __str__(self):
+        return str(self.event)
+
+    @property
+    def title(self):
+        return self.event.verbose_name
+
+
+class EntryQuerySet(models.QuerySet):
+    def with_score(self):
+        score = models.F('importance') * models.F('like')
+        return self.annotate(_score=score)
 
 
 class Entry(models.Model):
@@ -108,11 +94,20 @@ class Entry(models.Model):
         related_name='entries',
     )
     is_public = models.BooleanField(default=False)
-    value = models.DecimalField(
-        max_digits=20,
-        decimal_places=10,
-        null=True,
-        blank=True)
+
+    LIKE_CHOICES = (
+        (-1, _('no')),
+        (0, _('none')),
+        (1, _('yes')),
+    )
+    like = models.IntegerField(default=0, choices=LIKE_CHOICES)
+    IMPORTANCE_CHOICES = (
+        (1, _('anectodic')),
+        (2, _('small')),
+        (3, _('high')),
+        (4, _('very high')),
+    )
+    importance = models.IntegerField(default=1, choices=IMPORTANCE_CHOICES)
     start = models.DateTimeField(default=timezone.now, db_index=True)
     end = models.DateTimeField(null=True, blank=True, db_index=True)
     comment = models.TextField(null=True, blank=True)
@@ -123,33 +118,34 @@ class Entry(models.Model):
         db_index=True,
         unique=True,
     )
+    tags = TaggableManager()
+    objects = EntryQuerySet.as_manager()
 
     class Meta:
         ordering = ('-start', )
 
-    def save(self, **kwargs):
-        if not self.pk and self.value is None:
-            self.value = self.config.event.get_default_value()
+    @property
+    def hashtags(self):
+        regex = re.compile(r"#(\w+)")
+        return set(sorted(regex.findall(self.comment or '')))
 
+    def get_score(self):
+        try:
+            return self._score
+        except AttributeError:
+            return self.like * self.importance
+
+    def save(self, **kwargs):
         self.clean()
         return super().save(**kwargs)
 
+    def set_tags(self):
+        self.tags.add(*self.hashtags)
+
     def clean(self):
         super().clean()
-        if self.config.event.required_value and self.value is None:
-            raise ValidationError('Value is required')
 
-    @property
-    def formatted_value(self):
-        if self.value:
-            return self.config.event.format_value(self.value)
-        return
 
-    def display_text(self, owner=True):
-        if owner:
-            user = 'you'
-        else:
-            user = self.user.username
-
-        return self.config.event.get_display_text(
-            user_string=user, value=self.formatted_value)
+@receiver(post_save, sender=Entry, dispatch_uid="set_tags")
+def set_tags(sender, instance, **kwargs):
+    instance.set_tags()

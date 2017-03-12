@@ -8,8 +8,6 @@ class EventAdmin(admin.ModelAdmin):
     list_display = [
         'verbose_name',
         'code',
-        'value_type',
-        'default_value',
         'creation_date',
     ]
 
@@ -54,7 +52,6 @@ class EventConfigAdmin(admin.ModelAdmin):
 class EntryAdmin(admin.ModelAdmin):
     list_display = [
         'config',
-        'value',
         'start',
     ]
 

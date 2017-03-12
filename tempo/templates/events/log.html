@@ -2,20 +2,25 @@
 
 {% block content %}
 <div class="ui text container">
-    <div class="ui centered segment">
+    <header class="ui centered header">
+        <a class="ui positive button" href="{% url 'events:entries:create' %}">Add an entry <i class="i right arrow icon"></i></a>
+    </header>
+    <div class="ui centered feed">
         {% for day, entries in days %}
             <div class="ui horizontal divider">
                 {{ day }}
             </div>
             {% for entry in entries %}
-                <div class="ui vertical items">
-                    <div class="ui vertical item">
+                <div class="ui event">
+                    <div class="label">
                         <i class="ui image icon plus"></i>
-                        <div class="content">
-                            <p>{{ entry.display_text }}</p>
-                            <div class="ui label">
+                    </div>
+                    <div class="content">
+                        <div class="summary">
+                            {{ entry.config.verbose_name }}
+                            <div class="date">
                                 <i class="time icon"></i>
-                                {{ entry.start.time }}
+                                {{ entry.start.time|time }}
                             </div>
                         </div>
                     </div>

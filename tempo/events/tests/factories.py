@@ -1,4 +1,5 @@
 import factory
+from django.utils import timezone
 
 from tempo.users.tests.factories import UserFactory
 
@@ -10,9 +11,7 @@ class Event(factory.DjangoModelFactory):
 
     code = factory.Faker('word')
     verbose_name = factory.Faker('sentence')
-    value_type = 'integer'
     description = factory.Faker('paragraph')
-    default_value = 1
 
 
 class Config(factory.DjangoModelFactory):
@@ -30,4 +29,12 @@ class Entry(factory.DjangoModelFactory):
         model = 'events.Entry'
 
     config = factory.SubFactory(Config)
-    value = factory.Faker('random_int')
+    start = factory.LazyAttribute(lambda o: timezone.now())
+    detail_url = factory.Faker('url')
+    comment = factory.Faker('paragraph')
+
+    @factory.post_generation
+    def tags(self, create, extracted, **kwargs):
+        if not create or not extracted:
+            return
+        self.tags.add(*extracted)
