@@ -24,7 +24,7 @@ class Log(LoginRequiredMixin, generic.TemplateView):
         context = super().get_context_data()
         entries = models.Entry.objects.filter(
             config__user=self.request.user
-        ).order_by('-start')
+        ).order_by('-start').select_related('config__event').with_score()
         p = paginator.Paginator(entries, self.paginate_by)
         try:
             page = int(self.request.GET.get('page', 1))
@@ -37,7 +37,12 @@ class Log(LoginRequiredMixin, generic.TemplateView):
         days = []
         for k, g in itertools.groupby(
                 page.object_list, lambda e: e.start.date()):
-            days.append((k, list(g)))
+            d = {
+                'entries': list(g),
+            }
+            d['score'] = sum([e.get_score() for e in d['entries']])
+            d['count'] = len(d['entries'])
+            days.append((k, d))
         context['days'] = days
         context['paginator'] = p
         context['is_paginated'] = p.num_pages > 1
@@ -61,6 +66,10 @@ class EventCreate(LoginRequiredMixin, generic.CreateView):
 class EntryCreate(LoginRequiredMixin, generic.TemplateView):
     template_name = 'events/entries/create.html'
 
+    def get_context_data(self):
+        context = super().get_context_data()
+        context['Entry'] = models.Entry
+        return context
 
 class Search(APIView):
 
@@ -105,7 +114,9 @@ class EntryViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.EntrySerializer
 
     def get_queryset(self):
-        return self.request.user.entries.all()
+        return models.Entry.objects.filter(
+            config__user=self.request.user
+        )
 
 
 class ConfigViewSet(viewsets.ModelViewSet):

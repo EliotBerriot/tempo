@@ -3,49 +3,66 @@
 
 {% block content %}
     <div class="ui container">
-        <div id="entry-form">
-            <form class="ui form" v-on:submit.prevent="submit">
-                <div class="field">
-                    <label>Event</label>
-                    <search-input :url="configSearchUrl"></search-input>
+        <form class="ui form" id="entry-form">
+            <div class="ui three fields">
+                <div class="required field">
+                    <label>{% trans 'Event' %}</label>
+                    <search-input @value-changed="eventChanged" :url="configSearchUrl" name="event"></search-input>
                 </div>
-                <div class="field">
-                    <datetime-calendar @record-start="recordStart" @record-end="recordEnd" ></datetime-calendar>
+                <div class="required field">
+                    <label>{% trans 'Appreciation' %}</label>
+                    <select name="like" v-model="like">
+                      {% for value, display in Entry.LIKE_CHOICES %}
+                        <option value="{{ value }}">{{ display }}</option>
+                      {% endfor %}
+                    </select>
                 </div>
-                <div class="field">
-                    <label>Comment</label>
-                    <textarea name="comment" v-model="comment" placeholder="input your comment here..."></textarea>
+                <div class="required field">
+                    <label>{% trans 'Importance' %}</label>
+                    <select name="importance" v-model="importance">
+                      {% for value, display in Entry.IMPORTANCE_CHOICES %}
+                        <option value="{{ value }}">{{ display }}</option>
+                      {% endfor %}
+                    </select>
                 </div>
-                <div class="field">
-                    <label>URL</label>
-                    <input name="comment" placeholder="input your comment here...">
+
+            </div>
+            <div class="field">
+                <datetime-calendar @start-changed="startChanged" @end-changed="endChanged" ></datetime-calendar>
+            </div>
+            <div class="field">
+                <label>Comment</label>
+                <textarea name="comment" v-model="comment" placeholder="input your comment here..."></textarea>
+            </div>
+            <div class="field">
+                <label>URL</label>
+                <input name="comment" v-model="detailUrl" placeholder="An optional detail url for the entry">
+            </div>
+            <div class="field">
+                <div class="ui checkbox">
+                  <input type="checkbox" id="public-checkbox" v-model="isPublic">
+                  <label for="public-checkbox">{% trans 'make this entry publicly viewable' %}</label>
                 </div>
-                <div class="field">
-                    <div class="ui checkbox">
-                      <input tabindex="0" class="hidden" type="checkbox">
-                      <label>I agree to the Terms and Conditions</label>
-                    </div>
-                </div>
-                <button class="ui button">Submit</button>
-            </form>
-        </div>
+            </div>
+            <button class="ui button">Submit</button>
+        </form>
     </div>
     <script type="text/x-template" id="search-input-template">
         <div class="ui search selection dropdown">
-            <input type="hidden">
-            <input class="search" type="text">
+            <input type="hidden" :name="name">
+            <input class="search"  type="text">
             <i class="search icon"></i>
             <div class="default text">Select event...</div>
         </div>
     </script>
     <script type="text/x-template" id="datetime-calendar-template">
         <div class="two fields">
-          <div class="field">
+          <div class="required field">
             <label>Start</label>
             <div class="ui calendar rangestart">
               <div class="ui input left icon">
                 <i class="calendar icon"></i>
-                <input type="text" placeholder="Start">
+                <input type="text" name="start" placeholder="Start">
               </div>
             </div>
           </div>
@@ -54,7 +71,7 @@
             <div class="ui calendar rangeend">
               <div class="ui input left icon">
                 <i class="calendar icon"></i>
-                <input type="text" placeholder="End">
+                <input type="text" name="end" placeholder="End">
               </div>
             </div>
           </div>
@@ -69,7 +86,8 @@
             template: '#search-input-template',
 
             props: {
-                url: {type: String}
+                url: {type: String},
+                name: {type: String, default: 'search'},
             },
             mounted: function () {
                 var vm = this
@@ -78,9 +96,10 @@
                         url: vm.url
                     },
                     saveRemoteData: false,
-                }).on('change', function () {
-                    vm.$emit('input', $(vm.$el).dropdown('get value'))
-                });
+                    onChange: function(value) {
+                        vm.$emit('value-changed', value)
+                    },
+                })
             },
         });
         Vue.component('datetime-calendar', {
@@ -93,15 +112,17 @@
                 start.calendar({
                   type: 'datetime',
                   endCalendar: end,
+                  maxDate: new Date(),
                   onChange: function(date, text, mode) {
-                      vm.$emit('record-start', date)
+                      vm.$emit('start-changed', date)
                   },
               });
                 end.calendar({
                   type: 'datetime',
                   startCalendar: start,
+                  maxDate: new Date(),
                   onChange: function(date, text, mode) {
-                      vm.$emit('record-end', date)
+                      vm.$emit('end-changed', date)
                   },
               });
             },
@@ -115,17 +136,58 @@
                 end: null,
                 comment: 'trest2',
                 detailUrl: null,
+                isPublic: false,
+                like: 0,
+                importance: 1,
                 event: null,
             },
+            mounted: function () {
+                var vm = this;
+                $(this.$el).form({
+                    fields: {
+                        start     : 'empty',
+                        event   : 'empty',
+                        importance : 'empty',
+                        like : 'empty',
+                        start : 'empty',
+                    },
+                    inline : true,
+                    onSuccess: function(e){
+                        e.preventDefault();
+                        vm.submit();
+                    },
+                })
+            },
             methods: {
-                recordStart: function(value){
+                startChanged: function(value){
                     this.start = value;
                 },
-                recordEnd: function(value){
+                endChanged: function(value){
                     this.end = value;
                 },
+                eventChanged: function(value){
+                    this.event = parseInt(value);
+                },
                 submit: function(){
-                    console.log('yolo', this.start, this.end, this.comment)
+                    let payload = {
+                        start: this.start.toISOString(),
+                        comment: this.comment,
+                        like: this.like,
+                        importance: this.importance,
+                        config: this.event,
+                        detail_url: this.detailUrl,
+                        is_public: this.isPublic,
+                    }
+                    if (!!this.end){
+                        payload.end = this.end.toISOString();
+                    }
+                    $.ajax({
+                        url: '{% url "api:v1:events:entries-list" %}',
+                        data: payload,
+                        type: 'POST',
+                        dataType: 'json',
+                    });
+
                 }
             }
         })

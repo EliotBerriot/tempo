@@ -6,22 +6,44 @@
         <a class="ui positive button" href="{% url 'events:entries:create' %}">Add an entry <i class="i right arrow icon"></i></a>
     </header>
     <div class="ui centered feed">
-        {% for day, entries in days %}
+        {% for day, data in days %}
             <div class="ui horizontal divider">
-                {{ day }}
+                {{ day }} |
+
+                {% if data.score > 0 %}
+                    <span class="green text score"><i class="smile icon"></i> +{{ data.score }}</span>
+                {% elif data.score == 0 %}
+                    <span class="score"><i class="meh icon"></i> 0</span>
+                {% elif data.score < 0 %}
+                    <span class="red text score"><i class="frown icon"></i> {{ data.score }}</span>
+                {% endif %} | {% blocktrans count counter=data.count %}1 entry{% plural %}{{ counter }} entries{% endblocktrans %}
             </div>
-            {% for entry in entries %}
+            {% for entry in data.entries %}
                 <div class="ui event">
                     <div class="label">
                         <i class="ui image icon plus"></i>
                     </div>
                     <div class="content">
                         <div class="summary">
-                            {{ entry.config.verbose_name }}
+                            {{ entry.config.title }}
                             <div class="date">
                                 <i class="time icon"></i>
                                 {{ entry.start.time|time }}
                             </div>
+                        </div>
+                        {% if entry.comment %}
+                        <div class="extra text">
+                            {{ entry.comment }}
+                        </div>
+                        {% endif %}
+                        <div class="meta">
+                            {% if entry.get_score > 0 %}
+                                <span class="green text score"><i class="smile icon"></i> +{{ entry.get_score }}</span>
+                            {% elif entry.get_score == 0 %}
+                                <span class="score"><i class="meh icon"></i> 0</span>
+                            {% elif entry.get_score < 0 %}
+                                <span class="red text score"><i class="frown icon"></i> {{ entry.get_score }}</span>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

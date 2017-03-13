@@ -96,9 +96,9 @@ class Entry(models.Model):
     is_public = models.BooleanField(default=False)
 
     LIKE_CHOICES = (
-        (-1, _('no')),
-        (0, _('none')),
-        (1, _('yes')),
+        (-1, _('negative')),
+        (0, _('neutral')),
+        (1, _('positive')),
     )
     like = models.IntegerField(default=0, choices=LIKE_CHOICES)
     IMPORTANCE_CHOICES = (
