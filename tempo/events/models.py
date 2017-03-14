@@ -96,16 +96,20 @@ class Entry(models.Model):
     is_public = models.BooleanField(default=False)
 
     LIKE_CHOICES = (
+        (-4, _('awful')),
+        (-2, _('bad')),
         (-1, _('negative')),
         (0, _('neutral')),
         (1, _('positive')),
+        (2, _('good')),
+        (4, _('great')),
     )
     like = models.IntegerField(default=0, choices=LIKE_CHOICES)
     IMPORTANCE_CHOICES = (
         (1, _('anectodic')),
         (2, _('small')),
-        (3, _('high')),
-        (4, _('very high')),
+        (4, _('high')),
+        (8, _('very high')),
     )
     importance = models.IntegerField(default=1, choices=IMPORTANCE_CHOICES)
     start = models.DateTimeField(default=timezone.now, db_index=True)

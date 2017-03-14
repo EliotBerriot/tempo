@@ -122,9 +122,9 @@
                 var vm = this
                 $(this.$el).dropdown({
                     apiSettings: {
-                        url: vm.url
+                        url: vm.url,
+                        saveRemoteData: false,
                     },
-                    saveRemoteData: false,
                     onChange: function(value) {
                         vm.$emit('value-changed', value)
                     },
