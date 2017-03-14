@@ -7,7 +7,18 @@
             <div class="ui three fields">
                 <div class="required field">
                     <label>{% trans 'Event' %}</label>
-                    <search-input @value-changed="eventChanged" :url="configSearchUrl" name="event"></search-input>
+                    <div class="ui action input">
+                        <search-input ref="eventSelect" @value-changed="eventChanged" :url="configSearchUrl" name="event"></search-input>
+                        <a class="ui icon button" @click="showModal"><i class="plus icon"></i></a>
+                    </div>
+                    <modal-window ref="eventModal" @approved="selectEvent">
+                        <div class="header">
+                            Add a new event type
+                        </div>
+                        <div class="content">
+                            <event-form></event-form>
+                        </div>
+                    </modal-window>
                 </div>
                 <div class="required field">
                     <label>{% trans 'Appreciation' %}</label>
@@ -45,6 +56,10 @@
                 </div>
             </div>
             <button class="ui button">Submit</button>
+            <span v-if="score > 0" class="green text score"><i class="smile icon"></i> +[[ score ]]</span>
+            <span v-if="score == 0" class="score"><i class="meh icon"></i> 0</span>
+            <span v-if="score < 0" class="red text score"><i class="frown icon"></i> [[ score ]]</span>
+
         </form>
     </div>
     <script type="text/x-template" id="search-input-template">
@@ -53,6 +68,20 @@
             <input class="search"  type="text">
             <i class="search icon"></i>
             <div class="default text">Select event...</div>
+        </div>
+    </script>
+    <script type="text/x-template" id="event-form-template">
+        <form class="ui form">
+            <div class="required field">
+                <label>{% trans 'Name' %}</label>
+                <input type="text" name="name" v-model="name" />
+            </div>
+            <button class="ui button">Submit</button>
+        </form>
+    </script>
+    <script type="text/x-template" id="modal-window-template">
+        <div class="ui modal">
+            <slot></slot>
         </div>
     </script>
     <script type="text/x-template" id="datetime-calendar-template">
@@ -101,6 +130,68 @@
                     },
                 })
             },
+            methods: {
+                update: function(config){
+                    $(this.$el).dropdown('refresh');
+                    $(this.$el).dropdown('set text', config.event.verbose_name);
+                    $(this.$el).dropdown('set value', config.id);
+                }
+            }
+        });
+        Vue.component('modal-window', {
+            template: '#modal-window-template',
+
+            props: {},
+            mounted: function () {
+                var vm = this
+                $(this.$el).modal();
+                this.$on('submit', function(e){
+                    vm.approve(e)
+                })
+            },
+            methods: {
+                approve: function(data){
+                    $(this.$el).modal('hide')
+                    this.$emit('approved', data);
+                }
+            }
+        });
+        Vue.component('event-form', {
+            template: '#event-form-template',
+
+            mounted: function(){
+                var vm = this;
+                $(this.$el).form({
+                    fields: {
+                        name     : 'empty',
+                    },
+                    inline : true,
+                    onSuccess: function(e){
+                        e.preventDefault();
+                        vm.submit(e);
+                    },
+                })
+            },
+            data: function(){
+                return {
+                    name: '',
+                }
+            },
+            methods: {
+                submit: function(e){
+                    var vm = this;
+                    $.ajax({
+                        url: '{% url "api:v1:events:configs-list" %}',
+                        data: {verbose_name: vm.name},
+                        type: 'POST',
+                        dataType: 'json',
+                        success: function(data){
+                            vm.name = '';
+                            vm.$parent.$emit('submit', data)
+                        }
+                    });
+                }
+            }
         });
         Vue.component('datetime-calendar', {
             template: '#datetime-calendar-template',
@@ -168,6 +259,12 @@
                 eventChanged: function(value){
                     this.event = parseInt(value);
                 },
+                showModal: function(value){
+                    $(this.$refs.eventModal.$el).modal('show');
+                },
+                selectEvent: function(data){
+                    this.$refs.eventSelect.update(data)
+                },
                 submit: function(){
                     let payload = {
                         start: this.start.toISOString(),
@@ -186,8 +283,16 @@
                         data: payload,
                         type: 'POST',
                         dataType: 'json',
+                        success: function(){
+                            window.location.href = '{% url "events:log" %}';
+                        }
                     });
 
+                }
+            },
+            computed: {
+                score: function(){
+                    return this.like * this.importance;
                 }
             }
         })

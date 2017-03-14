@@ -13,9 +13,13 @@ class EventSerializer(serializers.ModelSerializer):
 
 
 class ConfigSerializer(serializers.ModelSerializer):
+    event = EventSerializer()
+
     class Meta:
         model = models.EventConfig
         fields = (
+            'id',
+            'event',
             'event',
             'is_public',
         )

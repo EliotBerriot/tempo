@@ -45,6 +45,7 @@ class TestEvent(TestCase):
         config = user.event_configs.latest('id')
 
         self.assertEqual(config.event.verbose_name, 'hello')
+        self.assertEqual(config.user, user)
 
     def test_can_search_config(self):
         user = self.make_user()
