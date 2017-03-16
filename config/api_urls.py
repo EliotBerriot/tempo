@@ -6,6 +6,7 @@ from tempo.events import views
 events = routers.DefaultRouter()
 events.register(r'entries', views.EntryViewSet, base_name='entries')
 events.register(r'configs', views.ConfigViewSet, base_name='configs')
+events.register(r'tags', views.TagViewSet, base_name='tags')
 
 v1_patterns = [
     url(r'^events/', include(events.urls, namespace='events')),

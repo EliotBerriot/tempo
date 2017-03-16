@@ -22,7 +22,7 @@
                 </div>
                 <div class="required field">
                     <label>{% trans 'Appreciation' %}</label>
-                    <select name="like" v-model="like">
+                    <select name="like" v-model="file.like">
                       {% for value, display in Entry.LIKE_CHOICES %}
                         <option value="{{ value }}">{{ display }}</option>
                       {% endfor %}
@@ -30,7 +30,7 @@
                 </div>
                 <div class="required field">
                     <label>{% trans 'Importance' %}</label>
-                    <select name="importance" v-model="importance">
+                    <select name="importance" v-model="file.importance">
                       {% for value, display in Entry.IMPORTANCE_CHOICES %}
                         <option value="{{ value }}">{{ display }}</option>
                       {% endfor %}
@@ -43,15 +43,21 @@
             </div>
             <div class="field">
                 <label>Comment</label>
-                <textarea name="comment" v-model="comment" placeholder="input your comment here..."></textarea>
+                <textarea name="comment" v-model="file.comment" placeholder="input your comment here..."></textarea>
             </div>
-            <div class="field">
-                <label>URL</label>
-                <input name="comment" v-model="detailUrl" placeholder="An optional detail url for the entry">
+            <div class="ui two fields">
+                <div class="field">
+                    <label>URL</label>
+                    <input name="comment" v-model="file.detailUrl" placeholder="An optional detail url for the entry">
+                </div>
+                <div class="field">
+                    <label>{% trans 'tags' %}</label>
+                    <tags-input ref="tagsSelect" @value-changed="tagsChanged" :url="tagsListUrl" name="tags"></tags-input>
+                </div>
             </div>
             <div class="field">
                 <div class="ui checkbox">
-                  <input type="checkbox" id="public-checkbox" v-model="isPublic">
+                  <input type="checkbox" id="public-checkbox" v-model="file.isPublic">
                   <label for="public-checkbox">{% trans 'make this entry publicly viewable' %}</label>
                 </div>
             </div>
@@ -68,6 +74,15 @@
             <input class="search"  type="text">
             <i class="search icon"></i>
             <div class="default text">Select event...</div>
+        </div>
+    </script>
+    <script type="text/x-template" id="tags-input-template">
+        <div class="ui fluid multiple search selection dropdown">
+          <input :name="name" type="hidden">
+          <input class="search"  type="text">
+          <i class="dropdown icon"></i>
+          <div class="default text">Whitespace separated list of tags...</div>
+          </div>
         </div>
     </script>
     <script type="text/x-template" id="event-form-template">
@@ -121,10 +136,42 @@
             mounted: function () {
                 var vm = this
                 $(this.$el).dropdown({
+                    debug: true,
                     apiSettings: {
                         url: vm.url,
                         saveRemoteData: false,
                     },
+                    onChange: function(value) {
+                        vm.$emit('value-changed', value)
+                    },
+                })
+            },
+            methods: {
+                update: function(config){
+                    $(this.$el).dropdown('refresh');
+                    $(this.$el).dropdown('set text', config.event.verbose_name);
+                    $(this.$el).dropdown('set value', config.id);
+                }
+            }
+        });
+        Vue.component('tags-input', {
+            template: '#tags-input-template',
+
+            props: {
+                url: {type: String},
+                name: {type: String, default: 'search'},
+            },
+            mounted: function () {
+                var vm = this
+                $(this.$el).dropdown({
+                    apiSettings: {
+                        url: vm.url,
+                        saveRemoteData: false,
+                    },
+                    keys: {
+                        delimiter: 32,
+                    },
+                    allowAdditions: true,
                     onChange: function(value) {
                         vm.$emit('value-changed', value)
                     },
@@ -223,14 +270,17 @@
             delimiters: ['[[', ']]'],
             data:  {
                 configSearchUrl: '/api/v1/search?q={query}&type=config',
-                start: null,
-                end: null,
-                comment: 'trest2',
-                detailUrl: null,
-                isPublic: false,
-                like: 0,
-                importance: 1,
-                event: null,
+                tagsListUrl: '{% url "api:v1:events:tags-search" %}?q={query}',
+                file: {
+                    start: null,
+                    end: null,
+                    comment: 'trest2',
+                    detailUrl: null,
+                    isPublic: false,
+                    like: 0,
+                    importance: 1,
+                    event: null,
+                }
             },
             mounted: function () {
                 var vm = this;
@@ -251,13 +301,16 @@
             },
             methods: {
                 startChanged: function(value){
-                    this.start = value;
+                    this.file.start = value;
                 },
                 endChanged: function(value){
-                    this.end = value;
+                    this.file.end = value;
                 },
                 eventChanged: function(value){
-                    this.event = parseInt(value);
+                    this.file.event = parseInt(value);
+                },
+                tagsChanged: function(value){
+                    this.file.tags = value.split(',');
                 },
                 showModal: function(value){
                     $(this.$refs.eventModal.$el).modal('show');
@@ -267,22 +320,24 @@
                 },
                 submit: function(){
                     let payload = {
-                        start: this.start.toISOString(),
-                        comment: this.comment,
-                        like: this.like,
-                        importance: this.importance,
-                        config: this.event,
-                        detail_url: this.detailUrl,
-                        is_public: this.isPublic,
+                        start: this.file.start.toISOString(),
+                        comment: this.file.comment,
+                        like: this.file.like,
+                        importance: this.file.importance,
+                        config: this.file.event,
+                        detail_url: this.file.detailUrl,
+                        is_public: this.file.isPublic,
+                        tags: this.file.tags,
                     }
-                    if (!!this.end){
-                        payload.end = this.end.toISOString();
+                    if (!!this.file.end){
+                        payload.end = this.file.end.toISOString();
                     }
                     $.ajax({
                         url: '{% url "api:v1:events:entries-list" %}',
-                        data: payload,
+                        data: JSON.stringify(payload),
                         type: 'POST',
                         dataType: 'json',
+                        contentType: 'application/json',
                         success: function(){
                             window.location.href = '{% url "events:log" %}';
                         }
@@ -292,7 +347,7 @@
             },
             computed: {
                 score: function(){
-                    return this.like * this.importance;
+                    return this.file.like * this.file.importance;
                 }
             }
         })

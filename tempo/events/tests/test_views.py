@@ -1,5 +1,5 @@
 import json
-
+from rest_framework.test import APITestCase
 from test_plus.test import TestCase
 from django.utils import timezone
 from django.forms import ValidationError
@@ -8,7 +8,7 @@ from tempo.events import models
 from . import factories
 
 
-class TestEvent(TestCase):
+class TestEvent(APITestCase, TestCase):
     def test_can_create_entry_from_api(self):
         user = self.make_user()
         config = factories.Config(user=user)
@@ -17,19 +17,78 @@ class TestEvent(TestCase):
             'detail_url': 'http://something.test',
             'config': config.pk,
             'start': timezone.now(),
+            'tags': ['python', 'django'],
         }
         url = self.reverse('api:v1:events:entries-list')
         with self.login(user):
-            response = self.post(
+            response = self.client.post(
                 url,
                 data=payload,
+                format='json',
             )
-        entries = config.entries.latest('id')
+        entry = config.entries.latest('id')
 
-        self.assertEqual(entries.config, config)
-        self.assertEqual(entries.comment, payload['comment'])
-        self.assertEqual(entries.detail_url, payload['detail_url'])
-        self.assertEqual(entries.start, payload['start'])
+        self.assertEqual(
+            list(entry.tags.order_by('slug').values_list('slug', flat=True)),
+            ['django', 'python'])
+        self.assertEqual(entry.config, config)
+        self.assertEqual(entry.comment, payload['comment'])
+        self.assertEqual(entry.detail_url, payload['detail_url'])
+        self.assertEqual(entry.start, payload['start'])
+
+    def test_can_edit_entry_from_api(self):
+        user = self.make_user()
+        entry = factories.Entry(config__user=user)
+        payload = {
+            'comment': 'hello',
+            'detail_url': 'http://something.test',
+            'config': entry.config.pk,
+            'start': timezone.now(),
+            'tags': ['python', 'django'],
+        }
+        url = self.reverse(
+            'api:v1:events:entries-detail', pk=entry.pk)
+        with self.login(user):
+            response = self.client.put(
+                url,
+                data=payload,
+                format='json',
+            )
+        entry.refresh_from_db()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            list(entry.tags.order_by('slug').values_list('slug', flat=True)),
+            ['django', 'python'])
+        self.assertEqual(entry.comment, payload['comment'])
+        self.assertEqual(entry.detail_url, payload['detail_url'])
+        self.assertEqual(entry.start, payload['start'])
+
+    def test_can_get_tags_from_api(self):
+        user = self.make_user()
+        entry = factories.Entry(config__user=user, tags=['python', 'django'])
+        url = self.reverse(
+            'api:v1:events:tags-list')
+        with self.login(user):
+            response = self.client.get(url)
+
+        payload = json.loads(response.content.decode('utf-8'))
+
+        expected = [
+            {
+                'name': 'python',
+                'text': 'python',
+                'value': 'python',
+            },
+            {
+                'name': 'django',
+                'text': 'django',
+                'value': 'django',
+            },
+        ]
+        self.assertEqual(len(payload), len(expected))
+        for e in expected:
+            self.assertIn(e, payload)
 
     def test_can_create_config_and_event_from_api(self):
         user = self.make_user()

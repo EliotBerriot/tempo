@@ -6,10 +6,14 @@ from django.core import urlresolvers, paginator
 from django import http
 from django.db.models import Q
 
+from taggit.models import Tag
+
 from rest_framework import viewsets
+from rest_framework import mixins
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.decorators import detail_route, list_route
 
 from . import forms
 from . import models
@@ -24,7 +28,8 @@ class Log(LoginRequiredMixin, generic.TemplateView):
         context = super().get_context_data()
         entries = models.Entry.objects.filter(
             config__user=self.request.user
-        ).order_by('-start').select_related('config__event').with_score()
+        ).prefetch_related(
+            'tags').order_by('-start').select_related('config__event').with_score()
         p = paginator.Paginator(entries, self.paginate_by)
         try:
             page = int(self.request.GET.get('page', 1))
@@ -70,6 +75,7 @@ class EntryCreate(LoginRequiredMixin, generic.TemplateView):
         context = super().get_context_data()
         context['Entry'] = models.Entry
         return context
+
 
 class Search(APIView):
 
@@ -117,6 +123,21 @@ class EntryViewSet(viewsets.ModelViewSet):
         return models.Entry.objects.filter(
             config__user=self.request.user
         )
+
+
+class TagViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    serializer_class = serializers.TagSerializer
+
+    def get_queryset(self):
+        return Tag.objects.all()
+
+    @list_route(methods=['get'])
+    def search(self, request, pk=None):
+        qs = self.get_queryset().filter(
+            slug__icontains=request.GET.get('q', ''))
+        serializer = self.serializer_class(qs, many=True)
+        return Response({"results": serializer.data},
+                        status=200)
 
 
 class ConfigViewSet(viewsets.ModelViewSet):

@@ -44,6 +44,9 @@
                             {% elif entry.get_score < 0 %}
                                 <span class="red text score"><i class="frown icon"></i> {{ entry.get_score }}</span>
                             {% endif %}
+                            {% if entry.tags.all|length > 0 %}
+                                <span><i class="tags icon"></i> {% for tag in entry.tags.all %}{{ tag.slug }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
