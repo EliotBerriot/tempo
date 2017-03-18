@@ -55,6 +55,7 @@ THIRD_PARTY_APPS = [
     'allauth.socialaccount',  # registration
     'taggit',
     'rest_framework',
+    'sekizai',
 ]
 
 # Apps specific for this project go here.
@@ -175,6 +176,7 @@ TEMPLATES = [
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
+                'sekizai.context_processors.sekizai',
                 # Your stuff: custom template context processors go here
             ],
             'builtins': [

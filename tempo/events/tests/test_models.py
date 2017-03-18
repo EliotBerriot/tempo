@@ -1,3 +1,4 @@
+import datetime
 from test_plus.test import TestCase
 from django.utils import timezone
 from django.forms import ValidationError
@@ -75,3 +76,22 @@ class TestEvent(TestCase):
         qs = e.tags.values_list('name', flat=True)
         self.assertEqual(e.hashtags, expected)
         self.assertEqual(set(qs), expected)
+
+    def test_duration_is_populated_from_start_and_end(self):
+        end = timezone.now()
+        duration = datetime.timedelta(seconds=36588)
+        start = end - duration
+        e = factories.Entry(
+            end=end,
+            start=start
+        )
+        self.assertEqual(e.duration, duration)
+
+    def test_end_must_be_greated_than_start(self):
+        end = timezone.now()
+        start = timezone.now() + datetime.timedelta(days=1)
+        with self.assertRaises(ValidationError):
+            e = factories.Entry(
+                end=end,
+                start=start
+            )

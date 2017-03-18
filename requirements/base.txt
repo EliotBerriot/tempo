@@ -52,3 +52,4 @@ django-compressor==2.1.1
 crispy-forms-semantic-ui
 django-taggit
 djangorestframework
+django-sekizai

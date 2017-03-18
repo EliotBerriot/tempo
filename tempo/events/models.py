@@ -114,6 +114,7 @@ class Entry(models.Model):
     importance = models.IntegerField(default=1, choices=IMPORTANCE_CHOICES)
     start = models.DateTimeField(default=timezone.now, db_index=True)
     end = models.DateTimeField(null=True, blank=True, db_index=True)
+    duration = models.DurationField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
     detail_url = models.URLField(null=True, blank=True)
     uuid = models.UUIDField(
@@ -141,12 +142,16 @@ class Entry(models.Model):
 
     def save(self, **kwargs):
         self.clean()
+        if self.end:
+            self.duration = self.end - self.start
         return super().save(**kwargs)
 
     def set_tags(self):
         self.tags.add(*self.hashtags)
 
     def clean(self):
+        if self.end and self.start > self.end:
+            raise ValidationError('Start cannot be greater than end')
         super().clean()
 
 

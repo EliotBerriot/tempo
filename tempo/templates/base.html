@@ -1,4 +1,4 @@
-{% load staticfiles i18n compress%}<!DOCTYPE html>
+{% load staticfiles i18n compress sekizai_tags %}<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -12,18 +12,12 @@
     <!--[if lt IE 9]>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
     <![endif]-->
-
-    {% block css %}
-    <!-- Latest compiled and minified Bootstrap 4 Alpha 4 CSS -->
-    <link rel="stylesheet" href="{% static 'semantic/dist/semantic.min.css' %}" crossorigin="anonymous">
-    <link rel="stylesheet" href="{% static 'vendor/calendar.min.css' %}" crossorigin="anonymous">
-
-    <!-- Your stuff: Third-party CSS libraries go here -->
-    {% compress css %}
-    <!-- This file stores project-specific CSS -->
-    <!-- <link href="{% static 'css/project.css' %}" rel="stylesheet"> -->
-    {% endcompress %}
-    {% endblock %}
+    {% render_block "css" postprocessor "compressor.contrib.sekizai.compress" %}
+    {% addtoblock "css" %}
+      <!-- Latest compiled and minified Bootstrap 4 Alpha 4 CSS -->
+      <link rel="stylesheet" href="{% static 'semantic/dist/semantic.min.css' %}" crossorigin="anonymous">
+      <link rel="stylesheet" href="{% static 'vendor/calendar.min.css' %}" crossorigin="anonymous">
+    {% endaddtoblock %}
 
   </head>
 
@@ -47,13 +41,16 @@
         <!-- Le javascript
         ================================================== -->
         <!-- Placed at the end of the document so the pages load faster -->
-        {% block javascript %}
+        {% render_block "js_files" postprocessor "compressor.contrib.sekizai.compress" %}
+        {% render_block "js_scripts" postprocessor "compressor.contrib.sekizai.compress" %}
+        {% addtoblock "js_files" %}
           <!-- Required by Bootstrap v4 Alpha 4 -->
           <script src="{% static 'vendor/jquery.min.js' %}" crossorigin="anonymous"></script>
           <script src="{% static 'semantic/dist/semantic.min.js' %}" crossorigin="anonymous"></script>
           <script src="{% static 'vendor/calendar.min.js' %}" crossorigin="anonymous"></script>
           <script src="{% static 'vendor/vue.js' %}" crossorigin="anonymous"></script>
-
+        {% endaddtoblock %}
+        {% addtoblock "js_scripts" %}
           <!-- Your stuff: Third-party javascript libraries go here -->
 
           <!-- place project specific Javascript in this file -->
@@ -86,11 +83,8 @@
               }
             });
           </script>
-          {% compress js %}
-          <!-- <script src="{% static 'js/project.js' %}"></script> -->
-          {% endcompress %}
+        {% endaddtoblock %}
 
-        {% endblock javascript %}
     </div>
   </body>
 </html>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load crispy_forms_tags %}
+{% load crispy_forms_tags sekizai_tags %}
 
 {% block content %}
     <div class="ui container">
@@ -121,10 +121,8 @@
           </div>
         </div>
     </script>
-{% endblock %}
 
-{% block javascript %}
-    {{ block.super }}
+    {% addtoblock "js_scripts" %}
     <script type="text/javascript">
         Vue.component('search-input', {
             template: '#search-input-template',
@@ -248,21 +246,21 @@
                 let start = $(this.$el).find('.rangestart')
                 let end = $(this.$el).find('.rangeend')
                 start.calendar({
-                  type: 'datetime',
-                  endCalendar: end,
-                  maxDate: new Date(),
-                  onChange: function(date, text, mode) {
-                      vm.$emit('start-changed', date)
-                  },
-              });
+                    type: 'datetime',
+                    endCalendar: end,
+                    maxDate: new Date(),
+                    onChange: function(date, text, mode) {
+                        vm.$emit('start-changed', date)
+                    },
+                });
                 end.calendar({
-                  type: 'datetime',
-                  startCalendar: start,
-                  maxDate: new Date(),
-                  onChange: function(date, text, mode) {
-                      vm.$emit('end-changed', date)
-                  },
-              });
+                    type: 'datetime',
+                    startCalendar: start,
+                    maxDate: new Date(),
+                    onChange: function(date, text, mode) {
+                        vm.$emit('end-changed', date)
+                    },
+                });
             },
         });
         new Vue({
@@ -352,4 +350,5 @@
             }
         })
     </script>
-{% endblock javascript %}
+{% endaddtoblock %}
+{% endblock %}
