@@ -1,58 +1,52 @@
 {% extends "base.html" %}
+{% load sekizai_tags %}
 
 {% block content %}
-<div class="ui text container">
+    {% include 'components/events/feed-entry.html' %}
+    {% include 'components/events/score-icon.html' %}
     <header class="ui centered header">
         <a class="ui positive button" href="{% url 'events:entries:create' %}">Add an entry <i class="i right arrow icon"></i></a>
     </header>
-    <div class="ui centered feed">
-        {% for day, data in days %}
-            <div class="ui horizontal divider">
-                {{ day }} |
 
-                {% if data.score > 0 %}
-                    <span class="green text score"><i class="smile icon"></i> +{{ data.score }}</span>
-                {% elif data.score == 0 %}
-                    <span class="score"><i class="meh icon"></i> 0</span>
-                {% elif data.score < 0 %}
-                    <span class="red text score"><i class="frown icon"></i> {{ data.score }}</span>
-                {% endif %} | {% blocktrans count counter=data.count %}1 entry{% plural %}{{ counter }} entries{% endblocktrans %}
+    <div class="ui centered feed container" id="feed">
+        <template v-for="day_data in days">
+            <div v-if="day_data.entries.length > 0" class="ui horizontal divider">
+                [[ day_data.date ]] |
+                <score-icon :score="day_data.score"></score-icon> |
+                [[ day_data.entries.length ]]
             </div>
-            {% for entry in data.entries %}
-                <div class="ui event">
-                    <div class="label">
-                        <i class="ui image icon plus"></i>
-                    </div>
-                    <div class="content">
-                        <div class="summary">
-                            {{ entry.config.title }}
-                            <div class="date">
-                                <i class="time icon"></i>
-                                {{ entry.start.time|time }}
-                            </div>
-                        </div>
-                        {% if entry.comment %}
-                        <div class="extra text">
-                            {{ entry.comment }}
-                        </div>
-                        {% endif %}
-                        <div class="meta">
-                            {% if entry.get_score > 0 %}
-                                <span class="green text score"><i class="smile icon"></i> +{{ entry.get_score }}</span>
-                            {% elif entry.get_score == 0 %}
-                                <span class="score"><i class="meh icon"></i> 0</span>
-                            {% elif entry.get_score < 0 %}
-                                <span class="red text score"><i class="frown icon"></i> {{ entry.get_score }}</span>
-                            {% endif %}
-                            {% if entry.tags.all|length > 0 %}
-                                <span><i class="tags icon"></i> {% for tag in entry.tags.all %}{{ tag.slug }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        {% endfor %}
+            <feed-entry v-for="entry in day_data.entries" :entry="entry"></feed-entry>
+        </template>
     </div>
-    {% if is_paginated %}{% load paginator %}{% paginator %}{% endif %}
-</div>
+
+    {% addtoblock "js_scripts" %}
+
+    <script type="text/javascript">
+        new Vue({
+            el: '#feed',
+            delimiters: ['[[', ']]'],
+            data:  {
+                days: []
+            },
+            mounted: function () {
+                this.fetchEntries();
+            },
+            methods: {
+                fetchEntries: function(){
+                    var vm = this;
+                    $.ajax({
+                        type: 'GET',
+                        url: '{% url "api:v1:events:entries-byday" %}',
+                        success: function(data){
+                            vm.days = data['days'];
+                        }
+                    })
+                }
+            },
+            computed: {
+            }
+        })
+    </script>
+    {% endaddtoblock %}
+
 {% endblock %}

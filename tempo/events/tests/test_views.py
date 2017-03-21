@@ -1,4 +1,6 @@
 import json
+import datetime
+from django.core.serializers.json import DjangoJSONEncoder
 from rest_framework.test import APITestCase
 from test_plus.test import TestCase
 from django.utils import timezone
@@ -6,6 +8,7 @@ from django.forms import ValidationError
 
 from tempo.events import models
 from . import factories
+from .. import serializers
 
 
 class TestEvent(APITestCase, TestCase):
@@ -127,6 +130,57 @@ class TestEvent(APITestCase, TestCase):
             ]
         }
         self.assertEqual(payload, expected)
+
+    def test_can_group_by_day_from_api(self):
+        now = timezone.now()
+        yesterday = now - datetime.timedelta(days=1)
+        two_days_ago = now - datetime.timedelta(days=2)
+        config = factories.Config(
+            event__verbose_name='hello')
+        e1 = factories.Entry(
+            start=now,
+            config=config
+        )
+        e2 = factories.Entry(
+            start=two_days_ago,
+            config=config
+        )
+        qs = models.Entry.objects.by_day(
+            start=two_days_ago.date(), end=now.date())
+
+        url = self.reverse('api:v1:events:entries-byday')
+        with self.login(config.user):
+            response = self.client.get(
+                url,
+                {'start': two_days_ago.date(), 'end': now.date()}
+            )
+
+        expected = {
+            'start': two_days_ago.date(),
+            'end': now.date(),
+            'days': [
+                {
+                    'date': now.date(),
+                    'entries': serializers.EntryNestedSerializer([e1], many=True).data,
+                    'score': 0,
+                },
+                {
+                    'date': yesterday.date(),
+                    'entries': serializers.EntryNestedSerializer([], many=True).data,
+                    'score': 0,
+                },
+                {
+                    'date': two_days_ago.date(),
+                    'entries': serializers.EntryNestedSerializer([e2], many=True).data,
+                    'score': 0,
+                },
+            ]
+        }
+
+        self.assertEqual(
+            json.loads(response.content.decode('utf-8')),
+            json.loads(DjangoJSONEncoder().encode(expected)),
+        )
     # def test_user_timeline(self):
     #     e1 = factories.Entry()
     #     e2 = factories.Entry(
@@ -136,7 +190,7 @@ class TestEvent(APITestCase, TestCase):
     #         config__user=e1.config.user,
     #     )
     #
-    #     url = self.reverse('events:log')
+    #     url = self.reverse('events:timeline')
     #     with self.login(e1.config.user):
     #         response = self.get(
     #             url,)

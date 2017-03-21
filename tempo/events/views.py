@@ -22,37 +22,6 @@ from . import serializers
 
 class Log(LoginRequiredMixin, generic.TemplateView):
     template_name = 'events/log.html'
-    paginate_by = 50
-
-    def get_context_data(self):
-        context = super().get_context_data()
-        entries = models.Entry.objects.filter(
-            config__user=self.request.user
-        ).prefetch_related(
-            'tags').order_by('-start').select_related('config__event').with_score()
-        p = paginator.Paginator(entries, self.paginate_by)
-        try:
-            page = int(self.request.GET.get('page', 1))
-        except TypeError:
-            page = 1
-        try:
-            page = p.page(page)
-        except paginator.EmptyPage:
-            raise http.Http404
-        days = []
-        for k, g in itertools.groupby(
-                page.object_list, lambda e: e.start.date()):
-            d = {
-                'entries': list(g),
-            }
-            d['score'] = sum([e.get_score() for e in d['entries']])
-            d['count'] = len(d['entries'])
-            days.append((k, d))
-        context['days'] = days
-        context['paginator'] = p
-        context['is_paginated'] = p.num_pages > 1
-        context['page_obj'] = page
-        return context
 
 
 class EventCreate(LoginRequiredMixin, generic.CreateView):
@@ -122,7 +91,25 @@ class EntryViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return models.Entry.objects.filter(
             config__user=self.request.user
-        )
+        ).prefetch_related('tags')
+
+    @list_route(methods=['GET'])
+    def byday(self, request, *args, **kwargs):
+        qs = self.get_queryset()
+        form = forms.ByDayForm(request.GET)
+        if not form.is_valid():
+            return Response({'errors': form.errors.as_json()}, status=400)
+
+        data = {
+            'start': form.cleaned_data['start'],
+            'end': form.cleaned_data['end'],
+            'days': qs.by_day(
+                end=form.cleaned_data['end'],
+                start=form.cleaned_data['start'],
+                serializer_class=serializers.EntryNestedSerializer,
+            ),
+        }
+        return Response(data, status=200)
 
 
 class TagViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):

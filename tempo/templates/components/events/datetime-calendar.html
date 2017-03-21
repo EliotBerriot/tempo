@@ -1,0 +1,55 @@
+{% load crispy_forms_tags sekizai_tags %}
+
+{% addtoblock "js_scripts" %}
+<script type="text/x-template" id="datetime-calendar-template">
+    <div class="two fields">
+      <div class="required field">
+        <label>Start</label>
+        <div class="ui calendar rangestart">
+          <div class="ui input left icon">
+            <i class="calendar icon"></i>
+            <input type="text" name="start" placeholder="Start">
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>End</label>
+        <div class="ui calendar rangeend">
+          <div class="ui input left icon">
+            <i class="calendar icon"></i>
+            <input type="text" name="end" placeholder="End">
+          </div>
+        </div>
+      </div>
+    </div>
+</script>
+
+<script type="text/javascript">
+Vue.component('datetime-calendar', {
+    template: '#datetime-calendar-template',
+
+    mounted: function () {
+        var vm = this
+        let start = $(this.$el).find('.rangestart')
+        let end = $(this.$el).find('.rangeend')
+        start.calendar({
+            type: 'datetime',
+            endCalendar: end,
+            maxDate: new Date(),
+            onChange: function(date, text, mode) {
+                vm.$emit('start-changed', date)
+            },
+        });
+        end.calendar({
+            type: 'datetime',
+            startCalendar: start,
+            maxDate: new Date(),
+            onChange: function(date, text, mode) {
+                vm.$emit('end-changed', date)
+            },
+        });
+    },
+});
+
+</script>
+{% endaddtoblock %}

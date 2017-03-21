@@ -1,0 +1,21 @@
+{% load crispy_forms_tags sekizai_tags %}
+
+{% addtoblock "js_scripts" %}
+<script type="text/x-template" id="score-icon-template">
+    <span>
+        <span v-if="score > 0" class="green text score"><i class="smile icon"></i> +[[score]]</span>
+        <span v-if="score == 0"><i class="meh icon"></i> 0</span>
+        <span v-if="score < 0" class="red text score"><i class="frown icon"></i> [[score]]</span>
+    </span>
+
+</script>
+
+<script type="text/javascript">
+Vue.component('score-icon', {
+    template: '#score-icon-template',
+    delimiters: ['[[', ']]'],
+    props: ['score'],
+});
+
+</script>
+{% endaddtoblock %}

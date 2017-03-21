@@ -95,3 +95,37 @@ class TestEvent(TestCase):
                 end=end,
                 start=start
             )
+
+    def test_can_group_entries_by_day(self):
+        now = timezone.now()
+        yesterday = now - datetime.timedelta(days=1)
+        two_days_ago = now - datetime.timedelta(days=2)
+        e1 = factories.Entry(
+            start=now
+        )
+        e2 = factories.Entry(
+            start=two_days_ago
+        )
+        qs = models.Entry.objects.by_day(
+            start=two_days_ago.date(), end=now.date())
+        expected = [
+            {
+                'date': now.date(),
+                'entries': [e1],
+                'score': 0,
+            },
+            {
+                'date': yesterday.date(),
+                'entries': [],
+                'score': 0,
+            },
+            {
+                'date': two_days_ago.date(),
+                'entries': [e2],
+                'score': 0,
+            },
+        ]
+
+        for i, row in enumerate(qs):
+            self.assertEqual(row['date'], expected[i]['date'])
+            self.assertEqual(list(row['entries']), expected[i]['entries'])

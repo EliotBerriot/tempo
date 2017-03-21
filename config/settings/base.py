@@ -178,6 +178,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'sekizai.context_processors.sekizai',
                 # Your stuff: custom template context processors go here
+                'tempo.events.context_processors.models',
             ],
             'builtins': [
                 'django.contrib.staticfiles.templatetags.staticfiles',
@@ -283,4 +284,4 @@ CRISPY_TEMPLATE_PACK = 'semantic-ui'
 CRISPY_ALLOWED_TEMPLATE_PACKS = ['semantic-ui']
 
 TAGGIT_CASE_INSENSITIVE = True
-LOGIN_REDIRECT_URL = 'events:log'
+LOGIN_REDIRECT_URL = 'events:timeline'

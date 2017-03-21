@@ -1,0 +1,38 @@
+{% load sekizai_tags %}
+
+{% addtoblock "js_files" %}
+    <script src="{% static 'vendor/moment.min.js' %}" crossorigin="anonymous"></script>
+{% endaddtoblock %}
+
+{% addtoblock "js_scripts" %}
+<script type="text/x-template" id="humanized-time-template">
+    <div class="date">
+        <i class="time icon"></i>
+        [[ humanizedTime ]]
+    </div>
+
+
+</script>
+
+<script type="text/javascript">
+Vue.component('humanized-time', {
+    template: '#humanized-time-template',
+    delimiters: ['[[', ']]'],
+    props: {
+        time: {
+            type: String
+        },
+        format: {
+            type: String,
+            default: 'HH:mm',
+        },
+    },
+    computed: {
+        humanizedTime: function(){
+            return moment(this.time).format(this.format);
+        }
+    }
+});
+
+</script>
+{% endaddtoblock %}

@@ -1,6 +1,8 @@
 import uuid
 import slugify
 import re
+import itertools
+import datetime
 
 from django.db import models
 from django.utils import timezone
@@ -86,6 +88,52 @@ class EntryQuerySet(models.QuerySet):
     def with_score(self):
         score = models.F('importance') * models.F('like')
         return self.annotate(_score=score)
+
+    def by_day(self, start, end, fill=True, serializer_class=None):
+        if end <= start:
+            raise ValueError('End must be greater than start')
+
+        qs = self.prefetch_related('tags')
+        qs = qs.order_by('-start')
+        qs = qs.select_related('config__event').with_score()
+        qs = qs.filter(
+            start__date__gte=start,
+            start__date__lte=end,
+        )
+
+        existing = {}
+        # group existing values form database
+        for k, g in itertools.groupby(qs, lambda e: e.start.date()):
+            entries = list(g)
+            final_entries = entries
+            if serializer_class:
+                final_entries = serializer_class(entries, many=True).data
+            d = {
+                'entries': final_entries,
+                'date': k
+            }
+            d['score'] = sum([e.get_score() for e in entries])
+            existing[k] = d
+
+        final = []
+        # fill missing dates
+        dates = [start]
+        while True:
+            new_date = dates[-1] + datetime.timedelta(days=1)
+            if new_date > end:
+                break
+            dates.append(new_date)
+
+        for date in sorted(dates, reverse=True):
+            try:
+                final.append(existing[date])
+            except KeyError:
+                final.append({
+                    'date': date,
+                    'score': 0,
+                    'entries': []
+                })
+        return final
 
 
 class Entry(models.Model):

@@ -21,9 +21,9 @@ entries_patterns = [
 ]
 urlpatterns = [
     url(
-        r'^log$',
+        r'^timeline$',
         view=views.Log.as_view(),
-        name='log'
+        name='timeline'
     ),
     url(
         r'^events/',

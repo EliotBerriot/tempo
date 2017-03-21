@@ -1,0 +1,68 @@
+{% load crispy_forms_tags sekizai_tags %}
+{% include 'components/humanized-time.html' %}
+
+{% include 'components/events/score-icon.html' %}
+{% include 'components/events/entry-form.html' %}
+{% include 'components/modal-window.html' %}
+
+{% addtoblock "js_scripts" %}
+<script type="text/x-template" id="feed-entry-template">
+    <div class="ui event">
+        <div class="label">
+            <i class="ui image icon plus"></i>
+        </div>
+        <div class="content">
+            <div class="summary">
+                [[ entry.config.event.verbose_name ]]
+                <humanized-time :time="entry.start"></humanized-time>
+
+            </div>
+            <div v-if="!!entry.comment" class="extra text">
+                [[ entry.comment ]]
+            </div>
+
+            <div class="meta">
+                <score-icon :score="entry.score"></score-icon>
+                <span v-if="tags.length > 0">
+                    <i class="tags icon"></i>
+                    <template v-for="(tag, index) in tags">
+                        [[ tag ]]<template v-if="index != tags.length-1">, </template>
+                    </template>
+                </span>
+                <a class="edit" @click="showEditModal">
+                    <i class="pencil icon"></i> {% trans 'edit' %}
+                </a>
+                <modal-window ref="editModal">
+                    <div class="header">
+                        Add a new event type
+                    </div>
+                    <div class="content">
+                        <entry-form :entry="entry"></entry-form>
+                    </div>
+                </modal-window>
+            </div>
+        </div>
+    </div>
+
+
+</script>
+
+<script type="text/javascript">
+Vue.component('feed-entry', {
+    template: '#feed-entry-template',
+    delimiters: ['[[', ']]'],
+    props: ['entry'],
+    methods: {
+        showEditModal: function(){
+            $(this.$refs.editModal.$el).modal('show');
+        },
+    },
+    computed: {
+        tags: function(){
+            return this.entry.tags.split(',');
+        }
+    }
+});
+
+</script>
+{% endaddtoblock %}

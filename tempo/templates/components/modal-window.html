@@ -1,0 +1,31 @@
+{% load crispy_forms_tags sekizai_tags %}
+
+{% addtoblock "js_scripts" %}
+<script type="text/x-template" id="modal-window-template">
+    <div class="ui modal">
+        <slot></slot>
+    </div>
+</script>
+
+<script type="text/javascript">
+Vue.component('modal-window', {
+    template: '#modal-window-template',
+
+    props: {},
+    mounted: function () {
+        var vm = this
+        $(this.$el).modal();
+        this.$on('submit', function(e){
+            vm.approve(e)
+        })
+    },
+    methods: {
+        approve: function(data){
+            $(this.$el).modal('hide')
+            this.$emit('approved', data);
+        }
+    }
+});
+
+</script>
+{% endaddtoblock %}

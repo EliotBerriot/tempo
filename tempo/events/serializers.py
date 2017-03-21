@@ -53,11 +53,15 @@ class StringListField(serializers.ListField):
     child = serializers.CharField()
 
     def to_representation(self, data):
-        return ','.join(data.values_list('name', flat=True))
+        return ','.join([
+            data.name for data in data.all()
+        ])
 
 
 class EntrySerializer(serializers.ModelSerializer):
-    tags = StringListField()
+    tags = StringListField(required=False)
+    score = serializers.SerializerMethodField()
+
     class Meta:
         model = models.Entry
         fields = (
@@ -71,16 +75,24 @@ class EntrySerializer(serializers.ModelSerializer):
             'is_public',
             'config',
             'tags',
+            'score',
         )
 
     def create(self, validated_data):
-        tags = validated_data.pop('tags')
+        tags = validated_data.pop('tags', [])
         instance = super().create(validated_data)
         instance.tags.set(*tags, clear=True)
         return instance
 
+    def get_score(self, obj):
+        return obj.get_score()
+
     def update(self, instance, validated_data):
-        tags = validated_data.pop('tags')
+        tags = validated_data.pop('tags', [])
         instance = super().update(instance, validated_data)
         instance.tags.set(*tags, clear=True)
         return instance
+
+
+class EntryNestedSerializer(EntrySerializer):
+    config = ConfigSerializer()

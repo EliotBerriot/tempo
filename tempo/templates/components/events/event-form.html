@@ -1,0 +1,54 @@
+{% load crispy_forms_tags sekizai_tags %}
+
+{% addtoblock "js_scripts" %}
+<script type="text/x-template" id="event-form-template">
+    <form class="ui form">
+        <div class="required field">
+            <label>{% trans 'Name' %}</label>
+            <input type="text" name="name" v-model="name" />
+        </div>
+        <button class="ui button">Submit</button>
+    </form>
+</script>
+
+<script type="text/javascript">
+Vue.component('event-form', {
+    template: '#event-form-template',
+
+    mounted: function(){
+        var vm = this;
+        $(this.$el).form({
+            fields: {
+                name     : 'empty',
+            },
+            inline : true,
+            onSuccess: function(e){
+                e.preventDefault();
+                vm.submit(e);
+            },
+        })
+    },
+    data: function(){
+        return {
+            name: '',
+        }
+    },
+    methods: {
+        submit: function(e){
+            var vm = this;
+            $.ajax({
+                url: '{% url "api:v1:events:configs-list" %}',
+                data: {verbose_name: vm.name},
+                type: 'POST',
+                dataType: 'json',
+                success: function(data){
+                    vm.name = '';
+                    vm.$parent.$emit('submit', data)
+                }
+            });
+        }
+    }
+});
+
+</script>
+{% endaddtoblock %}

@@ -1,0 +1,48 @@
+{% load crispy_forms_tags sekizai_tags %}
+
+{% addtoblock "js_scripts" %}
+<script type="text/x-template" id="tags-input-template">
+    <div class="ui fluid multiple search selection dropdown">
+      <input :name="name" type="hidden">
+      <input class="search"  type="text">
+      <i class="dropdown icon"></i>
+      <div class="default text">Whitespace separated list of tags...</div>
+      </div>
+    </div>
+</script>
+
+<script type="text/javascript">
+Vue.component('tags-input', {
+    template: '#tags-input-template',
+
+    props: {
+        url: {type: String},
+        name: {type: String, default: 'search'},
+    },
+    mounted: function () {
+        var vm = this
+        $(this.$el).dropdown({
+            apiSettings: {
+                url: vm.url,
+                saveRemoteData: false,
+            },
+            keys: {
+                delimiter: 32,
+            },
+            allowAdditions: true,
+            onChange: function(value) {
+                vm.$emit('value-changed', value)
+            },
+        })
+    },
+    methods: {
+        update: function(config){
+            $(this.$el).dropdown('refresh');
+            $(this.$el).dropdown('set text', config.event.verbose_name);
+            $(this.$el).dropdown('set value', config.id);
+        }
+    }
+});
+
+</script>
+{% endaddtoblock %}
