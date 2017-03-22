@@ -14,7 +14,7 @@ Vue.component('modal-window', {
     props: {},
     mounted: function () {
         var vm = this
-        $(this.$el).modal();
+        $(this.$el).modal({observeChanges:true});
         this.$on('submit', function(e){
             vm.approve(e)
         })

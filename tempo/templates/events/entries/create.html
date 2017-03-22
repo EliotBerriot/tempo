@@ -4,12 +4,18 @@
 {% block content %}
     {% include 'components/events/entry-form.html' %}
     <div class="ui container" id="entry-form">
-        <entry-form></entry-form>
+        <entry-form @success="redirectToTimeline"></entry-form>
     </div>
     {% addtoblock "js_scripts" %}
         <script type="text/javascript">
         var v = new Vue({
             el: '#entry-form',
+            methods: {
+                redirectToTimeline: function(payload, data){
+                    window.location.href = '{% url "events:timeline" %}';
+
+                }
+            }
         })
         </script>
     {% endaddtoblock %}

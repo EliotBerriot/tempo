@@ -16202,7 +16202,7 @@ ol.ui.horizontal.list li:before,
 /* Red */
 
 .ui.red.segment:not(.inverted) {
-  border-top: 2px solid #DB2828;
+  border-right: 2px solid #DB2828;
 }
 
 .ui.inverted.red.segment {
@@ -16213,7 +16213,7 @@ ol.ui.horizontal.list li:before,
 /* Orange */
 
 .ui.orange.segment:not(.inverted) {
-  border-top: 2px solid #F2711C;
+  border-right: 2px solid #F2711C;
 }
 
 .ui.inverted.orange.segment {
@@ -16224,7 +16224,7 @@ ol.ui.horizontal.list li:before,
 /* Yellow */
 
 .ui.yellow.segment:not(.inverted) {
-  border-top: 2px solid #FBBD08;
+  border-right: 2px solid #FBBD08;
 }
 
 .ui.inverted.yellow.segment {
@@ -16235,7 +16235,7 @@ ol.ui.horizontal.list li:before,
 /* Olive */
 
 .ui.olive.segment:not(.inverted) {
-  border-top: 2px solid #B5CC18;
+  border-right: 2px solid #B5CC18;
 }
 
 .ui.inverted.olive.segment {
@@ -16246,7 +16246,7 @@ ol.ui.horizontal.list li:before,
 /* Green */
 
 .ui.green.segment:not(.inverted) {
-  border-top: 2px solid #21BA45;
+  border-right: 2px solid #21BA45;
 }
 
 .ui.inverted.green.segment {
@@ -16257,7 +16257,7 @@ ol.ui.horizontal.list li:before,
 /* Teal */
 
 .ui.teal.segment:not(.inverted) {
-  border-top: 2px solid #00B5AD;
+  border-right: 2px solid #00B5AD;
 }
 
 .ui.inverted.teal.segment {
@@ -16268,7 +16268,7 @@ ol.ui.horizontal.list li:before,
 /* Blue */
 
 .ui.blue.segment:not(.inverted) {
-  border-top: 2px solid #2185D0;
+  border-right: 2px solid #2185D0;
 }
 
 .ui.inverted.blue.segment {
@@ -16279,7 +16279,7 @@ ol.ui.horizontal.list li:before,
 /* Violet */
 
 .ui.violet.segment:not(.inverted) {
-  border-top: 2px solid #6435C9;
+  border-right: 2px solid #6435C9;
 }
 
 .ui.inverted.violet.segment {
@@ -16290,7 +16290,7 @@ ol.ui.horizontal.list li:before,
 /* Purple */
 
 .ui.purple.segment:not(.inverted) {
-  border-top: 2px solid #A333C8;
+  border-right: 2px solid #A333C8;
 }
 
 .ui.inverted.purple.segment {
@@ -16301,7 +16301,7 @@ ol.ui.horizontal.list li:before,
 /* Pink */
 
 .ui.pink.segment:not(.inverted) {
-  border-top: 2px solid #E03997;
+  border-right: 2px solid #E03997;
 }
 
 .ui.inverted.pink.segment {
@@ -16312,7 +16312,7 @@ ol.ui.horizontal.list li:before,
 /* Brown */
 
 .ui.brown.segment:not(.inverted) {
-  border-top: 2px solid #A5673F;
+  border-right: 2px solid #A5673F;
 }
 
 .ui.inverted.brown.segment {
@@ -16323,7 +16323,7 @@ ol.ui.horizontal.list li:before,
 /* Grey */
 
 .ui.grey.segment:not(.inverted) {
-  border-top: 2px solid #767676;
+  border-right: 2px solid #767676;
 }
 
 .ui.inverted.grey.segment {
@@ -16334,7 +16334,7 @@ ol.ui.horizontal.list li:before,
 /* Black */
 
 .ui.black.segment:not(.inverted) {
-  border-top: 2px solid #1B1C1D;
+  border-right: 2px solid #1B1C1D;
 }
 
 .ui.inverted.black.segment {
@@ -26531,7 +26531,6 @@ a.ui.card:hover,
   padding: 0.21428571rem 0em;
   margin: 0em;
   background: none;
-  border-top: none;
 }
 
 .ui.feed > .event:first-child {
@@ -26702,7 +26701,7 @@ a.ui.card:hover,
   padding: 0em;
   border-left: none;
   font-size: 1em;
-  max-width: 500px;
+  max-width: 700px;
   line-height: 1.4285em;
 }
 
@@ -26801,6 +26800,10 @@ a.ui.card:hover,
 /*******************************
     User Variable Overrides
 *******************************/
+
+.ui.feed > .event.segment {
+  padding: 1em;
+}
 /*!
  * # Semantic UI 2.2.9 - Item
  * http://github.com/semantic-org/semantic-ui/

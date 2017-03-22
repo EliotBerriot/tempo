@@ -1,3 +1,7 @@
 /*******************************
     User Variable Overrides
 *******************************/
+
+.ui.feed > .event.segment {
+    padding: 1em;
+}

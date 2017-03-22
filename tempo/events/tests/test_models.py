@@ -1,4 +1,5 @@
 import datetime
+import html
 from test_plus.test import TestCase
 from django.utils import timezone
 from django.forms import ValidationError
@@ -95,6 +96,20 @@ class TestEvent(TestCase):
                 end=end,
                 start=start
             )
+
+    def test_can_render_comment_as_markdown(self):
+        e = factories.Entry(
+            comment="hello"
+        )
+        self.assertEqual(e.comment_rendered, '<p>hello</p>')
+
+    def test_can_render_comment_as_markdown_skipping_html(self):
+        e = factories.Entry(
+            comment="<script>alert('hello');</script>"
+        )
+        expected = "<p>&lt;script&gt;alert('hello');&lt;/script&gt;</p>"
+
+        self.assertEqual(e.comment_rendered, expected)
 
     def test_can_group_entries_by_day(self):
         now = timezone.now()

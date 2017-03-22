@@ -37,6 +37,14 @@
 
         {% block content %}{% endblock content %}
         {% block modal %}{% endblock modal %}
+        <script>
+          var CONFIG = {}
+          {% if request.user.is_authenticated %}
+          CONFIG.timezone = "{{ request.user.timezone}}"
+          {% else %}
+          CONFIG.timezone = "{{ default_timezone }}"
+          {% endif %}
+        </script>
 
         <!-- Le javascript
         ================================================== -->

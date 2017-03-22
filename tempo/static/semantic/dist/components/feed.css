@@ -42,7 +42,6 @@
   padding: 0.21428571rem 0em;
   margin: 0em;
   background: none;
-  border-top: none;
 }
 .ui.feed > .event:first-child {
   border-top: 0px;
@@ -201,7 +200,7 @@
   padding: 0em;
   border-left: none;
   font-size: 1em;
-  max-width: 500px;
+  max-width: 700px;
   line-height: 1.4285em;
 }
 
@@ -294,3 +293,6 @@
     User Variable Overrides
 *******************************/
 
+.ui.feed > .event.segment {
+  padding: 1em;
+}

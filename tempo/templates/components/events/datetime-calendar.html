@@ -1,5 +1,8 @@
 {% load crispy_forms_tags sekizai_tags %}
-
+{% addtoblock "js_files" %}
+    <script src="{% static 'vendor/moment.min.js' %}" crossorigin="anonymous"></script>
+    <script src="{% static 'vendor/moment.timezone.js' %}" crossorigin="anonymous"></script>
+{% endaddtoblock %}
 {% addtoblock "js_scripts" %}
 <script type="text/x-template" id="datetime-calendar-template">
     <div class="two fields">
@@ -27,7 +30,10 @@
 <script type="text/javascript">
 Vue.component('datetime-calendar', {
     template: '#datetime-calendar-template',
-
+    props: {
+        start: {required: false},
+        end: {required: false},
+    },
     mounted: function () {
         var vm = this
         let start = $(this.$el).find('.rangestart')
@@ -40,6 +46,11 @@ Vue.component('datetime-calendar', {
                 vm.$emit('start-changed', date)
             },
         });
+        if (!!this.start){
+            start.calendar('set date', moment(this.start).tz(CONFIG.timezone).format());
+        } else {
+            start.calendar('set date', moment(new Date()).tz(CONFIG.timezone).format());
+        }
         end.calendar({
             type: 'datetime',
             startCalendar: start,
@@ -48,6 +59,10 @@ Vue.component('datetime-calendar', {
                 vm.$emit('end-changed', date)
             },
         });
+        if (!!this.end){
+            end.calendar('set date', moment(this.end).tz(CONFIG.timezone).format())
+        }
+
     },
 });
 

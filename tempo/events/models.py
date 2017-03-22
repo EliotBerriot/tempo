@@ -14,6 +14,7 @@ from django.dispatch import receiver
 from taggit.managers import TaggableManager
 
 from tempo.users.models import User
+from . import markdown
 
 
 class Event(models.Model):
@@ -188,6 +189,10 @@ class Entry(models.Model):
         except AttributeError:
             return self.like * self.importance
 
+    @property
+    def comment_rendered(self):
+        return markdown.safe_markdown(self.comment or '')
+
     def save(self, **kwargs):
         self.clean()
         if self.end:
@@ -203,6 +208,6 @@ class Entry(models.Model):
         super().clean()
 
 
-@receiver(post_save, sender=Entry, dispatch_uid="set_tags")
+@receiver(post_save, sender=Entry)
 def set_tags(sender, instance, **kwargs):
     instance.set_tags()

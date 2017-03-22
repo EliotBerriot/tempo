@@ -2,6 +2,7 @@
 
 {% addtoblock "js_files" %}
     <script src="{% static 'vendor/moment.min.js' %}" crossorigin="anonymous"></script>
+    <script src="{% static 'vendor/moment.timezone.js' %}" crossorigin="anonymous"></script>
 {% endaddtoblock %}
 
 {% addtoblock "js_scripts" %}
@@ -19,9 +20,7 @@ Vue.component('humanized-time', {
     template: '#humanized-time-template',
     delimiters: ['[[', ']]'],
     props: {
-        time: {
-            type: String
-        },
+        time: {},
         format: {
             type: String,
             default: 'HH:mm',
@@ -29,7 +28,7 @@ Vue.component('humanized-time', {
     },
     computed: {
         humanizedTime: function(){
-            return moment(this.time).format(this.format);
+            return moment(this.time).tz(CONFIG.timezone).format(this.format);
         }
     }
 });

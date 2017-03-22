@@ -53,3 +53,4 @@ crispy-forms-semantic-ui
 django-taggit
 djangorestframework
 django-sekizai
+markdown

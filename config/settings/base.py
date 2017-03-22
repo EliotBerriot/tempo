@@ -78,6 +78,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'tempo.users.middleware.UserTimezoneMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -179,6 +180,7 @@ TEMPLATES = [
                 'sekizai.context_processors.sekizai',
                 # Your stuff: custom template context processors go here
                 'tempo.events.context_processors.models',
+                'tempo.events.context_processors.timezone',
             ],
             'builtins': [
                 'django.contrib.staticfiles.templatetags.staticfiles',

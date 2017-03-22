@@ -7,40 +7,47 @@
 
 {% addtoblock "js_scripts" %}
 <script type="text/x-template" id="feed-entry-template">
-    <div class="ui event">
+    <div :class="['ui', color, attachmentClass, 'attached', 'segment', 'event']">
         <div class="label">
-            <i class="ui image icon plus"></i>
+            <i class="newspaper icon"></i>
         </div>
         <div class="content">
             <div class="summary">
                 [[ entry.config.event.verbose_name ]]
-                <humanized-time :time="entry.start"></humanized-time>
+            </div>
+            <div class="extra text">
+                <div class="ui stackable grid">
+                    <div class="thirteen wide column">
+                        <div v-if="!!entry.comment" v-html="entry.comment_rendered"></div>
 
-            </div>
-            <div v-if="!!entry.comment" class="extra text">
-                [[ entry.comment ]]
+                        <div class="ui hidden divider"></div>
+                        <div class="ui labels tiny" v-if="entry.tags.length > 0">
+                            <a v-for="(tag, index) in entry.tags" class="ui basic label">
+                                <span class="grey text"><i class="tags icon"></i> [[ tag ]]</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="three wide column">
+                        <div class="ui link list">
+                            <p><humanized-time class="item" :time="entry.start"></humanized-time></p>
+                            <p><score-icon class="item" :score="entry.score"></score-icon></p>
+                            <p v-if="!!entry.detail_url" ><a class="item" :href="entry.detail_url" target="_blank" rel="noreferrer noopener">
+                                <i class="linkify icon"></i> {% trans 'details' %}
+                            </a></p>
+                            <p><a class="item edit" @click="toggleEditForm">
+                                <i class="pencil icon"></i> {% trans 'edit' %}
+                            </a></p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="meta">
-                <score-icon :score="entry.score"></score-icon>
-                <span v-if="tags.length > 0">
-                    <i class="tags icon"></i>
-                    <template v-for="(tag, index) in tags">
-                        [[ tag ]]<template v-if="index != tags.length-1">, </template>
-                    </template>
-                </span>
-                <a class="edit" @click="showEditModal">
-                    <i class="pencil icon"></i> {% trans 'edit' %}
-                </a>
-                <modal-window ref="editModal">
-                    <div class="header">
-                        Add a new event type
-                    </div>
-                    <div class="content">
-                        <entry-form :entry="entry"></entry-form>
-                    </div>
-                </modal-window>
+            <div class="container" v-if="displayEditForm">
+                <div class="ui divider"></div>
+                <h4>{% trans 'Edit this entry' %}</h4>
+                <entry-form  :entry="entry" @success="updateEntry"></entry-form>
             </div>
+
         </div>
     </div>
 
@@ -51,17 +58,47 @@
 Vue.component('feed-entry', {
     template: '#feed-entry-template',
     delimiters: ['[[', ']]'],
-    props: ['entry'],
+    props: ['entry', 'isFirst', 'isLast'],
+    data: function(){
+        var data = {
+            displayEditForm: false,
+        }
+        data.attachmentClass = '';
+        if (this.isFirst){
+            data.attachmentClass = 'top';
+        }
+        if (this.isLast){
+            data.attachmentClass = 'bottom';
+        }
+        return data;
+    },
     methods: {
-        showEditModal: function(){
-            $(this.$refs.editModal.$el).modal('show');
+        toggleEditForm: function(){
+            this.displayEditForm = !this.displayEditForm;
+        },
+        updateEntry: function(payload, data){
+            for (var k in data) {
+                if (data.hasOwnProperty(k)) {
+                   this.entry[k] = data[k];
+                }
+            }
+            this.toggleEditForm()
         },
     },
     computed: {
-        tags: function(){
-            return this.entry.tags.split(',');
-        }
-    }
+        color: function(){
+            if (this.entry.score == 0){
+                return '';
+            }
+            if (this.entry.score < 0){
+                return 'orange';
+            }
+
+            if (this.entry.score > 0){
+                return 'olive';
+            }
+        },
+    },
 });
 
 </script>

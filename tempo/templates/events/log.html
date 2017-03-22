@@ -8,17 +8,16 @@
         <a class="ui positive button" href="{% url 'events:entries:create' %}">Add an entry <i class="i right arrow icon"></i></a>
     </header>
 
-    <div class="ui centered feed container" id="feed">
+    <div class="ui centered feed text container" id="feed">
         <template v-for="day_data in days">
             <div v-if="day_data.entries.length > 0" class="ui horizontal divider">
                 [[ day_data.date ]] |
                 <score-icon :score="day_data.score"></score-icon> |
                 [[ day_data.entries.length ]]
             </div>
-            <feed-entry v-for="entry in day_data.entries" :entry="entry"></feed-entry>
+            <feed-entry v-for="(entry, index) in day_data.entries" :is-first="index == 0" :entry="entry" :is-last="index == day_data.entries.length - 1"></feed-entry>
         </template>
     </div>
-
     {% addtoblock "js_scripts" %}
 
     <script type="text/javascript">
