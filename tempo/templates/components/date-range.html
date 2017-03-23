@@ -1,0 +1,83 @@
+{% load sekizai_tags %}
+
+{% addtoblock "js_files" %}
+{% endaddtoblock %}
+
+{% addtoblock "js_scripts" %}
+<script type="text/x-template" id="date-range-template">
+
+    <div class="ui form">
+        <div class="two fields">
+          <div class="field">
+            <label>{% trans 'Start date' %}</label>
+            <div class="ui calendar rangestart">
+              <div class="ui input left icon">
+                <i class="calendar icon"></i>
+                <input type="text" placeholder="Start">
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label>{% trans 'End date' %}</label>
+            <div class="ui calendar rangeend">
+              <div class="ui input left icon">
+                <i class="calendar icon"></i>
+                <input type="text" placeholder="End">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+</script>
+
+<script type="text/javascript">
+Vue.component('date-range', {
+    template: '#date-range-template',
+    props: {
+        start: {required: false},
+        end: {required: false},
+    },
+    mounted: function () {
+        var vm = this
+        let start = $(this.$el).find('.rangestart')
+        let end = $(this.$el).find('.rangeend')
+        start.calendar({
+            type: 'date',
+            endCalendar: end,
+            maxDate: new Date(),
+            onChange: function(date, text, mode) {
+                vm.$emit('start-changed', date)
+            },
+        });
+        if (!!this.start){
+            start.calendar('set date', moment(this.start).tz(CONFIG.timezone).format());
+        } else {
+            start.calendar('set date', moment(new Date()).tz(CONFIG.timezone).format());
+        }
+        end.calendar({
+            type: 'date',
+            startCalendar: start,
+            maxDate: new Date(),
+            onChange: function(date, text, mode) {
+                vm.$emit('end-changed', date)
+            },
+        });
+        if (!!this.end){
+            end.calendar('set date', moment(this.end).tz(CONFIG.timezone).format())
+        }
+
+    },
+    methods: {
+        startBehaviour: function(behaviour, arg1, arg2){
+            $(this.$el).find('.rangestart').calendar(behaviour, arg1, arg2);
+        },
+        endBehaviour: function(behaviour, arg1, arg2){
+            $(this.$el).find('.rangeend').calendar(behaviour, arg1, arg2);
+        },
+    }
+});
+
+</script>
+{% endaddtoblock %}

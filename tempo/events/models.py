@@ -3,6 +3,7 @@ import slugify
 import re
 import itertools
 import datetime
+import collections
 
 from django.db import models
 from django.utils import timezone
@@ -90,7 +91,7 @@ class EntryQuerySet(models.QuerySet):
         score = models.F('importance') * models.F('like')
         return self.annotate(_score=score)
 
-    def by_day(self, start, end, fill=True, serializer_class=None):
+    def by_day(self, start, end, fill=False, serializer_class=None):
         if end <= start:
             raise ValueError('End must be greater than start')
 
@@ -101,8 +102,7 @@ class EntryQuerySet(models.QuerySet):
             start__date__gte=start,
             start__date__lte=end,
         )
-
-        existing = {}
+        existing = collections.OrderedDict()
         # group existing values form database
         for k, g in itertools.groupby(qs, lambda e: e.start.date()):
             entries = list(g)
@@ -117,23 +117,28 @@ class EntryQuerySet(models.QuerySet):
             existing[k] = d
 
         final = []
-        # fill missing dates
-        dates = [start]
-        while True:
-            new_date = dates[-1] + datetime.timedelta(days=1)
-            if new_date > end:
-                break
-            dates.append(new_date)
+        if fill:
+            # fill missing dates
+            dates = [start]
+            while True:
+                new_date = dates[-1] + datetime.timedelta(days=1)
+                if new_date > end:
+                    break
+                dates.append(new_date)
 
-        for date in sorted(dates, reverse=True):
-            try:
-                final.append(existing[date])
-            except KeyError:
-                final.append({
-                    'date': date,
-                    'score': 0,
-                    'entries': []
-                })
+            for date in sorted(dates, reverse=True):
+                try:
+                    final.append(existing[date])
+                except KeyError:
+                    final.append({
+                        'date': date,
+                        'score': 0,
+                        'entries': []
+                    })
+        else:
+            final = []
+            for date, data in existing.items():
+                final.append(data)
         return final
 
 

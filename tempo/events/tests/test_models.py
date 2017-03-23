@@ -122,7 +122,7 @@ class TestEvent(TestCase):
             start=two_days_ago
         )
         qs = models.Entry.objects.by_day(
-            start=two_days_ago.date(), end=now.date())
+            start=two_days_ago.date(), end=now.date(), fill=True)
         expected = [
             {
                 'date': now.date(),

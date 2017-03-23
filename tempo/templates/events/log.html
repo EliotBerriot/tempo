@@ -4,45 +4,172 @@
 {% block content %}
     {% include 'components/events/feed-entry.html' %}
     {% include 'components/events/score-icon.html' %}
-    <header class="ui centered header">
-        <a class="ui positive button" href="{% url 'events:entries:create' %}">Add an entry <i class="i right arrow icon"></i></a>
-    </header>
+    {% include 'components/date-range.html' %}
+    {% addtoblock "js_files" %}
+        <script src="{% static 'vendor/moment.min.js' %}" crossorigin="anonymous"></script>
+        <script src="{% static 'vendor/moment.timezone.js' %}" crossorigin="anonymous"></script>
+    {% endaddtoblock %}
+    <div class="ui stackable grid container" id="feed-wrapper">
+        <div class="ui six wide column">
+            <div class="ui hidden divider"></div>
+            <div class="ui segment sticky">
+                <h4>{% trans 'Filter entries' %}</h4>
+                <div class="ui hidden divider"></div>
+                <form class="ui form" @submit.prevent="fetchEntries">
+                    <div class="field">
+                        <date-range ref="dateFilter" @start-changed="startChanged" @end-changed="endChanged"  :start="filters.start" :end="filters.end"></date-range>
+                    </div>
+                    <div class="field">
+                        <label>{% trans 'Search' %}</label>
+                        <input v-model="filters.search" />
+                    </div>
+                    <div class="field">
+                        <label>{% trans 'Event' %}</label>
+                        <search-input ref="configSelect" :config="filters.config" @value-changed="configChanged" :url="configSearchUrl" :autofocus="false" name="config"></search-input>
+                    </div>
+                    <div class="field">
+                        <label>{% trans 'Tags' %}</label>
+                        <tags-input ref="tagFilter" @value-changed="tagsChanged" :url="tagsListUrl" name="tags" :tags="initialTags"></tags-input>
+                    </div>
+                </form>
+                <div class="ui divider"></div>
 
-    <div class="ui centered feed text container" id="feed">
-        <template v-for="day_data in days">
-            <div v-if="day_data.entries.length > 0" class="ui horizontal divider">
-                [[ day_data.date ]] |
-                <score-icon :score="day_data.score"></score-icon> |
-                [[ day_data.entries.length ]]
+                <a class="ui basic positive button" href="{% url 'events:entries:create' %}">{% trans 'Add an entry' %} <i class="i right arrow icon"></i></a>
+                <button class="ui basic right floated button" @click="setDefaultFilters">
+                    <i class="ui remove icon"></i> {% trans 'Reset filters' %}
+                </button>
+
             </div>
-            <feed-entry v-for="(entry, index) in day_data.entries" :is-first="index == 0" :entry="entry" :is-last="index == day_data.entries.length - 1"></feed-entry>
-        </template>
+        </div>
+        <div class="ui centered feed text container ten wide column" id="feed">
+            <div v-if="isLoading" class="ui active inverted dimmer">
+                <div class="ui active centered inline text loader">{% trans 'Loading entries' %}</div>
+            </div>
+            <template v-for="day_data in days">
+                <div v-if="day_data.entries.length > 0" class="ui horizontal divider">
+                    [[ day_data.date ]] |
+                    <score-icon :score="day_data.score"></score-icon> |
+                    [[ day_data.entries.length ]]
+                </div>
+                <feed-entry v-for="(entry, index) in day_data.entries" :is-first="index == 0" :entry="entry" :is-last="index == day_data.entries.length - 1" :filters="filters" @tag-clicked="toggleTag"></feed-entry>
+            </template>
+        </div>
     </div>
     {% addtoblock "js_scripts" %}
 
     <script type="text/javascript">
-        new Vue({
-            el: '#feed',
+        var v = new Vue({
+            el: '#feed-wrapper',
             delimiters: ['[[', ']]'],
             data:  {
-                days: []
+                days: [],
+                isLoading: true,
+                tagsListUrl: '{% url "api:v1:events:tags-search" %}?q={query}',
+                configSearchUrl: '/api/v1/search?q={query}&type=config',
+                filters: {
+                    tags: [],
+                    search: '',
+                    config: null,
+                    start: moment().subtract(14, 'days').format(),
+                    end: moment().format(),
+                },
+                defaultFilters: {}
             },
             mounted: function () {
-                this.fetchEntries();
+                this.defaultFilters = JSON.parse(JSON.stringify(this.filters));
+                this.parseFilterFromQuerystring();
+                $(this.$el).find('.ui.sticky').sticky({
+                    context: '#feed-wrapper',
+                })
             },
             methods: {
                 fetchEntries: function(){
+                    this.isLoading = true;
                     var vm = this;
+                    var filters = this.getFilterPayload()
                     $.ajax({
                         type: 'GET',
                         url: '{% url "api:v1:events:entries-byday" %}',
+                        data: filters,
                         success: function(data){
                             vm.days = data['days'];
+                            setTimeout(function(){
+                                vm.isLoading = false;
+
+                            }, 250)
                         }
                     })
+                },
+                parseFilterFromQuerystring: function(){
+                    this.filters.search = getParameterByName('search');
+                    var tags = getParameterByName('tags');
+                    if (!!tags){
+                        this.filters.tags = tags.split(',');
+                    }
+
+                },
+                getFilterPayload: function(){
+                    var payload = {}
+                    if (!!this.filters.tags){
+                        payload.tags = this.filters.tags.join(',');
+                    }
+                    if (!!this.filters.search){
+                        payload.search = this.filters.search;
+                    }
+                    if (!!this.filters.config){
+                        payload.config = this.filters.config;
+                    }
+                    if (!!this.filters.start){
+                        payload.start = this.filters.start;
+                    }
+                    if (!!this.filters.end){
+                        payload.end = this.filters.end;
+                    }
+                    return payload
+                },
+                configChanged: function(value){
+                    this.filters.config = parseInt(value);
+                },
+                startChanged: function(value){
+                    this.filters.start = moment(value).format('YYYY-MM-DD')
+                },
+                endChanged: function(value){
+                    this.filters.end = moment(value).format('YYYY-MM-DD')
+                },
+                tagsChanged: function(value){
+                    if (!!value){
+                        this.filters.tags = value.split(',');
+                    } else {
+                        this.filters.tags = [];
+                    }
+                },
+                toggleTag: function(tag){
+                    if (this.filters.tags.indexOf(tag) > -1){
+                        // we remove the tag as it's already present
+                        this.$refs.tagFilter.remove(tag)
+                    } else {
+                        this.$refs.tagFilter.add(tag)
+                    }
+                },
+                setDefaultFilters: function(){
+                    this.filters = JSON.parse(JSON.stringify(this.defaultFilters));
+                    this.$refs.tagFilter.behaviour('restore defaults');
+                    this.$refs.dateFilter.startBehaviour('set date', this.filters.start);
+                    this.$refs.dateFilter.endBehaviour('set date', this.filters.end);
+                },
+            },
+            watch: {
+                filters: {
+                    handler: function(){
+                        this.fetchEntries();
+                    },
+                    deep: true,
                 }
             },
             computed: {
+                initialTags: function(){
+                    return getParameterByName('tags');
+                },
             }
         })
     </script>

@@ -14,7 +14,7 @@
                 <template v-if="create">
                     <label>{% trans 'Event' %}</label>
                     <div class="ui action input">
-                        <search-input ref="configSelect" :config="entry.config" @value-changed="configChanged" :url="configSearchUrl" name="config"></search-input>
+                        <search-input ref="configSelect" :config="entry.config" @value-changed="configChanged" :url="configSearchUrl" :autofocus="true" name="config"></search-input>
                         <a class="ui icon button" @click="showModal"><i class="plus icon"></i></a>
                     </div>
                     <modal-window ref="eventModal" @approved="selectConfig">

@@ -22,8 +22,8 @@
 
                         <div class="ui hidden divider"></div>
                         <div class="ui labels tiny" v-if="entry.tags.length > 0">
-                            <a v-for="(tag, index) in entry.tags" class="ui basic label">
-                                <span class="grey text"><i class="tags icon"></i> [[ tag ]]</span>
+                            <a v-for="(tag, index) in entry.tags" :class="{ui: true, label: true, basic: !(filters.tags.indexOf(tag) > -1)}">
+                                <span class="grey text" @click="$emit('tag-clicked', tag)"><i class="tags icon"></i> [[ tag ]]</span>
                             </a>
                         </div>
                     </div>
@@ -58,7 +58,7 @@
 Vue.component('feed-entry', {
     template: '#feed-entry-template',
     delimiters: ['[[', ']]'],
-    props: ['entry', 'isFirst', 'isLast'],
+    props: ['entry', 'isFirst', 'isLast', 'filters'],
     data: function(){
         var data = {
             displayEditForm: false,

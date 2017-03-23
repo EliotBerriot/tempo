@@ -35,6 +35,7 @@ Vue.component('tags-input', {
                 vm.$emit('value-changed', value)
             },
         });
+
         if (!!this.tags){
             try {
                 $(this.$el).dropdown('set exactly', this.tags.split(','));
@@ -47,11 +48,15 @@ Vue.component('tags-input', {
         }
     },
     methods: {
-        update: function(config){
-            $(this.$el).dropdown('refresh');
-            $(this.$el).dropdown('set text', config.event.verbose_name);
-            $(this.$el).dropdown('set value', config.id);
-        }
+        behaviour: function(behaviour, arg1, arg2, arg3, arg4){
+            $(this.$el).dropdown(behaviour, arg1, arg2, arg3, arg4);
+        },
+        add: function(tag){
+            $(this.$el).dropdown('set selected', [tag]);
+        },
+        remove: function(tag){
+            $(this.$el).dropdown('remove selected', tag);
+        },
     }
 });
 

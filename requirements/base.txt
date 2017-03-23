@@ -54,3 +54,4 @@ django-taggit
 djangorestframework
 django-sekizai
 markdown
+django-filter

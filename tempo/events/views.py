@@ -18,6 +18,7 @@ from rest_framework.decorators import detail_route, list_route
 from . import forms
 from . import models
 from . import serializers
+from . import filters
 
 
 class Log(LoginRequiredMixin, generic.TemplateView):
@@ -114,12 +115,15 @@ class EntryViewSet(viewsets.ModelViewSet):
         if not form.is_valid():
             return Response({'errors': form.errors.as_json()}, status=400)
 
+        qs = filters.EntryFilter(request.GET, queryset=qs).qs
+
         data = {
             'start': form.cleaned_data['start'],
             'end': form.cleaned_data['end'],
             'days': qs.by_day(
                 end=form.cleaned_data['end'],
                 start=form.cleaned_data['start'],
+                fill=False,
                 serializer_class=serializers.EntryNestedSerializer,
             ),
         }

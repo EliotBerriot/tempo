@@ -12,6 +12,8 @@ from .. import serializers
 
 
 class TestEvent(APITestCase, TestCase):
+    maxDiff = None
+
     def test_can_create_entry_from_api(self):
         user = self.make_user()
         config = factories.Config(user=user)
@@ -165,11 +167,6 @@ class TestEvent(APITestCase, TestCase):
                     'score': 0,
                 },
                 {
-                    'date': yesterday.date(),
-                    'entries': serializers.EntryNestedSerializer([], many=True).data,
-                    'score': 0,
-                },
-                {
                     'date': two_days_ago.date(),
                     'entries': serializers.EntryNestedSerializer([e2], many=True).data,
                     'score': 0,
@@ -177,6 +174,145 @@ class TestEvent(APITestCase, TestCase):
             ]
         }
 
+        self.assertEqual(
+            json.loads(response.content.decode('utf-8')),
+            json.loads(DjangoJSONEncoder().encode(expected)),
+        )
+
+    def test_can_filter_group_by_day_by_tag(self):
+        now = timezone.now()
+        yesterday = now - datetime.timedelta(days=1)
+        two_days_ago = now - datetime.timedelta(days=2)
+        config = factories.Config(
+            event__verbose_name='hello')
+        e1 = factories.Entry(
+            start=now,
+            config=config,
+            tags=['hello', 'is', 'it', 'me'],
+        )
+        e2 = factories.Entry(
+            start=two_days_ago,
+            config=config,
+            tags=['hello', 'is'],
+        )
+        qs = models.Entry.objects.by_day(
+            start=two_days_ago.date(), end=now.date())
+
+        url = self.reverse('api:v1:events:entries-byday')
+        with self.login(config.user):
+            response = self.client.get(
+                url,
+                {
+                    'start': two_days_ago.date(),
+                    'end': now.date(),
+                    'tags': 'hello,is,me',
+                }
+            )
+
+        expected = {
+            'start': two_days_ago.date(),
+            'end': now.date(),
+            'days': [
+                {
+                    'date': now.date(),
+                    'entries': serializers.EntryNestedSerializer([e1], many=True).data,
+                    'score': 0,
+                },
+            ]
+        }
+        self.assertEqual(
+            json.loads(response.content.decode('utf-8')),
+            json.loads(DjangoJSONEncoder().encode(expected)),
+        )
+
+    def test_can_filter_group_by_day_by_comment_content(self):
+        now = timezone.now()
+        yesterday = now - datetime.timedelta(days=1)
+        two_days_ago = now - datetime.timedelta(days=2)
+        config = factories.Config(
+            event__verbose_name='test')
+        e1 = factories.Entry(
+            start=now,
+            config=config,
+            comment="hello"
+        )
+        e2 = factories.Entry(
+            start=two_days_ago,
+            config=config,
+            comment="goodbye",
+        )
+        qs = models.Entry.objects.by_day(
+            start=two_days_ago.date(), end=now.date())
+
+        url = self.reverse('api:v1:events:entries-byday')
+        with self.login(config.user):
+            response = self.client.get(
+                url,
+                {
+                    'start': two_days_ago.date(),
+                    'end': now.date(),
+                    'search': 'hel test',
+                }
+            )
+
+        expected = {
+            'start': two_days_ago.date(),
+            'end': now.date(),
+            'days': [
+                {
+                    'date': now.date(),
+                    'entries': serializers.EntryNestedSerializer([e1], many=True).data,
+                    'score': 0,
+                },
+            ]
+        }
+        self.assertEqual(
+            json.loads(response.content.decode('utf-8')),
+            json.loads(DjangoJSONEncoder().encode(expected)),
+        )
+
+    def test_can_filter_group_by_day_by_config(self):
+        now = timezone.now()
+        yesterday = now - datetime.timedelta(days=1)
+        two_days_ago = now - datetime.timedelta(days=2)
+        config1 = factories.Config(
+            event__verbose_name='test1')
+        config2 = factories.Config(
+            event__verbose_name='test2',
+            user=config1.user)
+        e1 = factories.Entry(
+            start=now,
+            config=config1,
+        )
+        e2 = factories.Entry(
+            start=two_days_ago,
+            config=config2,
+        )
+        qs = models.Entry.objects.by_day(
+            start=two_days_ago.date(), end=now.date())
+
+        url = self.reverse('api:v1:events:entries-byday')
+        with self.login(config1.user):
+            response = self.client.get(
+                url,
+                {
+                    'start': two_days_ago.date(),
+                    'end': now.date(),
+                    'config': config1.pk,
+                }
+            )
+
+        expected = {
+            'start': two_days_ago.date(),
+            'end': now.date(),
+            'days': [
+                {
+                    'date': now.date(),
+                    'entries': serializers.EntryNestedSerializer([e1], many=True).data,
+                    'score': 0,
+                },
+            ]
+        }
         self.assertEqual(
             json.loads(response.content.decode('utf-8')),
             json.loads(DjangoJSONEncoder().encode(expected)),
