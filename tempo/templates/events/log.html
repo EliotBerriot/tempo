@@ -18,6 +18,18 @@
                 <form class="ui form" @submit.prevent="fetchEntries">
                     <div class="field">
                         <date-range ref="dateFilter" @start-changed="startChanged" @end-changed="endChanged"  :start="filters.start" :end="filters.end"></date-range>
+                        <p v-if="!!periodDuration">[[ humanizedPeriodDuration]]</p>
+                        <div class="ui two basic buttons">
+                            <button class="ui button" @click="selectPeriod(previousPeriod)">
+                                <i class="angle double left icon"></i>
+                                {% trans 'Previous period' %}
+                            </button>
+                            <button class="ui button" @click="selectPeriod(nextPeriod)" :disabled="!nextPeriod">
+                                {% trans 'Next period' %}
+                                <i class="angle double right icon"></i>
+                            </button>
+                        </div>
+
                     </div>
                     <div class="field">
                         <label>{% trans 'Search' %}</label>
@@ -54,6 +66,7 @@
                 <feed-entry v-for="(entry, index) in day_data.entries" :is-first="index == 0" :entry="entry" :is-last="index == day_data.entries.length - 1" :filters="filters" @tag-clicked="toggleTag"></feed-entry>
             </template>
         </div>
+
     </div>
     {% addtoblock "js_scripts" %}
 
@@ -154,13 +167,21 @@
                 setDefaultFilters: function(){
                     this.filters = JSON.parse(JSON.stringify(this.defaultFilters));
                     this.$refs.tagFilter.behaviour('restore defaults');
-                    this.$refs.dateFilter.startBehaviour('set date', this.filters.start);
-                    this.$refs.dateFilter.endBehaviour('set date', this.filters.end);
+                    this.updateRange();
                 },
+                selectPeriod: function(period){
+                    this.filters.start = period.start.format('YYYY-MM-DD');
+                    this.filters.end = period.end.format('YYYY-MM-DD');
+                    this.updateRange();
+                },
+                updateRange: function(){
+                    this.$refs.dateFilter.updateRange(this.filters.start, this.filters.end);
+
+                }
             },
             watch: {
                 filters: {
-                    handler: function(){
+                    handler: function(oldVal, newVal){
                         this.fetchEntries();
                     },
                     deep: true,
@@ -170,7 +191,53 @@
                 initialTags: function(){
                     return getParameterByName('tags');
                 },
-            }
+                periodDuration: function(){
+                    if (!!this.filters.start && !!this.filters.end){
+                        return moment(this.filters.end).diff(moment(this.filters.start));
+                    }
+                    return null
+                },
+                humanizedPeriodDuration: function(){
+                    return moment.duration(this.periodDuration).humanize();
+                },
+                previousPeriod: function(){
+                    var d = this.periodDuration;
+                    var previousEnd = moment(this.filters.start).subtract(1, 'days');
+                    var previousStart = moment(previousEnd).subtract(d);
+                    return {
+                        start: previousStart,
+                        end: previousEnd,
+                    }
+                },
+                nextPeriod: function(){
+                    var d = this.periodDuration;
+                    var nextStart = moment(this.filters.end).add(1, 'days');
+                    var nextEnd = moment(nextStart).add(d);
+                    var now = moment();
+                    if (nextEnd.isAfter(now)){
+
+                        if (nextStart.isAfter(now)){
+                            // both start and end after now, no way to get
+                            // past that
+                            return null
+                        }
+                        // a small portion of the period would be okay,
+                        // to keep the smae period, we simply start from the
+                        // end
+                        var r = {
+                            start: moment(now).subtract(d),
+                            end: now,
+                        }
+                        return r
+                    }
+
+                    return {
+                        start: nextStart,
+                        end: nextEnd,
+                    }
+                }
+            },
+
         })
     </script>
     {% endaddtoblock %}

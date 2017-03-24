@@ -76,6 +76,17 @@ Vue.component('date-range', {
         endBehaviour: function(behaviour, arg1, arg2){
             $(this.$el).find('.rangeend').calendar(behaviour, arg1, arg2);
         },
+        updateRange: function(start, end){
+            var currentStart = moment(this.startBehaviour('get date'));
+            if (moment(start).isAfter(currentStart)){
+                // if we're going forward, we need to update end before start
+                this.endBehaviour('set date', end);
+                this.startBehaviour('set date', start);
+            } else {
+                this.startBehaviour('set date', start);
+                this.endBehaviour('set date', end);
+            }
+        },
     }
 });
 
