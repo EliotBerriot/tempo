@@ -12,3 +12,9 @@ def timezone(request):
     return {
         'default_timezone': settings.TIME_ZONE
     }
+
+
+def raven(request):
+    return {
+        'js_dsn': settings.RAVEN_JS_DSN
+    }

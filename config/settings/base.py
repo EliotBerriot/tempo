@@ -181,6 +181,7 @@ TEMPLATES = [
                 # Your stuff: custom template context processors go here
                 'tempo.events.context_processors.models',
                 'tempo.events.context_processors.timezone',
+                'tempo.events.context_processors.raven',
             ],
             'builtins': [
                 'django.contrib.staticfiles.templatetags.staticfiles',
@@ -287,3 +288,5 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = ['semantic-ui']
 
 TAGGIT_CASE_INSENSITIVE = True
 LOGIN_REDIRECT_URL = 'events:timeline'
+
+RAVEN_JS_DSN = env('RAVEN_JS_DSN', default=None)

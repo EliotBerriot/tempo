@@ -51,7 +51,14 @@
           </div>
         </div>
     </div>
+    {% if js_dsn %}
+        <script src="{% static 'vendor/raven.min.js' %}" crossorigin="anonymous"></script>
+        <script>
+          Raven.config('{{ js_dsn }}').install()
+        </script>
+    {% endif %}
     <script>
+
       var CONFIG = {}
       {% if request.user.is_authenticated %}
       CONFIG.timezone = "{{ request.user.timezone}}"
