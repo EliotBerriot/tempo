@@ -100,7 +100,8 @@ DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 # URL that handles the media served from MEDIA_ROOT, used for managing
 # stored files.
 MEDIA_URL = '/media/'
-
+STATIC_ROOT = env('STATIC_ROOT', default='/srv/static')
+MEDIA_ROOT = env('MEDIA_ROOT', default='/srv/media')
 
 # Static Assets
 # ------------------------
