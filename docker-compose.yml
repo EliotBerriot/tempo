@@ -5,8 +5,8 @@ volumes:
   postgres_backup: {}
 
 services:
-  restart: unless-stopped
   postgres:
+    restart: unless-stopped
     build: ./compose/postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
