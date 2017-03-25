@@ -41,6 +41,15 @@ class TestEvent(APITestCase, TestCase):
         self.assertEqual(entry.detail_url, payload['detail_url'])
         self.assertEqual(entry.start, payload['start'])
 
+    def test_can_delete_entry_from_api(self):
+        entry = factories.Entry()
+        url = self.reverse(
+            'api:v1:events:entries-detail', pk=entry.pk)
+        with self.login(entry.config.user):
+            response = self.client.delete(url)
+        with self.assertRaises(models.Entry.DoesNotExist):
+            models.Entry.objects.get(pk=entry.pk)
+
     def test_can_edit_entry_from_api(self):
         user = self.make_user()
         entry = factories.Entry(config__user=user)
@@ -110,6 +119,25 @@ class TestEvent(APITestCase, TestCase):
 
         self.assertEqual(config.event.verbose_name, 'hello')
         self.assertEqual(config.user, user)
+
+    def test_creating_event_se_slug_to_deduplicate(self):
+        user1 = self.make_user('test1')
+        user2 = self.make_user('test2')
+
+        config1 = factories.Config(event__slug='test', user=user1)
+        payload = {
+            'verbose_name': 'Test',
+        }
+        url = self.reverse('api:v1:events:configs-list')
+        with self.login(user2):
+            response = self.post(
+                url,
+                data=payload,
+            )
+        config2 = user2.event_configs.latest('id')
+
+        self.assertEqual(config2.event, config1.event)
+        self.assertEqual(config2.user, user2)
 
     def test_can_search_config(self):
         user = self.make_user()

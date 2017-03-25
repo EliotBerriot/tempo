@@ -1,5 +1,6 @@
 import itertools
 import datetime
+import slugify
 
 from django.views import generic
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -182,13 +183,19 @@ class ConfigViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = serializers.EventSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
+        try:
+            slug = slugify.Slugify(
+                to_lower=True,
+                max_length=190,
+            )(serializer.validated_data['verbose_name'])
+            event = models.Event.objects.get(slug=slug)
+        except models.Event.DoesNotExist:
+            self.perform_create(serializer)
+            event = serializer.instance
+            event.created_by = request.user
+            event.save()
 
-        event = serializer.instance
-        event.created_by = request.user
-        event.save()
-
-        config = models.EventConfig.objects.create(
+        config, _ = models.EventConfig.objects.get_or_create(
             event=event,
             user=request.user
         )

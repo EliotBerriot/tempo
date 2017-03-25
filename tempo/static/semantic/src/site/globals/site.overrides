@@ -11,3 +11,17 @@
         .-((@i - 1));
     }.-;
 }
+
+
+.pusher {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+#content {
+  flex: 1;
+}
+.pusher > .footer {
+  flex: 1;
+}

@@ -1,9 +1,8 @@
 {% load i18n %}
 <div class="ui large top menu">
     <nav class="ui container">
-      <a class="item" href="/">tempo</a>
-      <a class="item" href="{% url 'home' %}">Home</a>
-      <a class="item" href="{% url 'about' %}">About</a>
+      <a class="item" href="{% url 'home' %}">Tempo</a>
+      
 
       <div class="right menu">
         {% if request.user.is_authenticated %}

@@ -32,11 +32,22 @@
                             <p><humanized-time class="item" :time="entry.start"></humanized-time></p>
                             <p><score-icon class="item" :score="entry.score"></score-icon></p>
                             <p v-if="!!entry.detail_url" ><a class="item" :href="entry.detail_url" target="_blank" rel="noreferrer noopener">
-                                <i class="linkify icon"></i> {% trans 'details' %}
+                                <i class="linkify icon"></i> {% trans 'Details' %}
                             </a></p>
                             <p><a class="item edit" @click="toggleEditForm">
-                                <i class="pencil icon"></i> {% trans 'edit' %}
+                                <i class="pencil icon"></i> {% trans 'Edit' %}
                             </a></p>
+                            <p>
+                                <a class="item delete" @click="confirmDelete = !confirmDelete">
+                                <i class="delete icon"></i> {% trans 'Delete' %}
+                                </a>
+                            </p>
+                            <p v-if="!!confirmDelete" class="confirm">
+                                <button @click="deleteEntry" class="ui compact red icon button">
+                                    <i class="check icon"></i>
+                                </button>
+                                <a @click="confirmDelete = !confirmDelete">{% trans 'Cancel' %}</a>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -62,6 +73,7 @@ Vue.component('feed-entry', {
     data: function(){
         var data = {
             displayEditForm: false,
+            confirmDelete: false,
         }
         data.attachmentClass = '';
         if (this.isFirst){
@@ -83,6 +95,16 @@ Vue.component('feed-entry', {
                 }
             }
             this.toggleEditForm()
+        },
+        deleteEntry: function(){
+            var vm = this;
+            $.ajax({
+                url: this.entry.update_url,
+                type: 'DELETE',
+                success: function(data){
+                    vm.$emit('deleted-entry', vm.entry);
+                }
+            });
         },
     },
     computed: {

@@ -65,6 +65,7 @@ class EntrySerializer(serializers.ModelSerializer):
     score = serializers.SerializerMethodField()
     update_url = serializers.SerializerMethodField()
     comment_rendered = serializers.SerializerMethodField()
+    comment_rendered = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Entry

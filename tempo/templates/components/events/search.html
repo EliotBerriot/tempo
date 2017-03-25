@@ -6,7 +6,7 @@
         <input type="hidden" :name="name">
         <input class="search" :autofocus="autofocus" type="text">
         <i class="search icon"></i>
-        <div class="default text">Select event...</div>
+        <div class="default text">{% trans 'Select event...' %}</div>
     </div>
 </script>
 <script type="text/javascript">
@@ -23,7 +23,6 @@
             $(this.$el).dropdown({
                 apiSettings: {
                     url: vm.url,
-                    saveRemoteData: false,
                 },
                 onChange: function(value) {
                     vm.$emit('value-changed', value)
@@ -31,11 +30,6 @@
             });
         },
         methods: {
-            update: function(config){
-                $(this.$el).dropdown('refresh');
-                $(this.$el).dropdown('set text', config.event.verbose_name);
-                $(this.$el).dropdown('set value', config.id);
-            },
             behaviour: function(behaviour, arg1, arg2, arg3, arg4){
                 $(this.$el).dropdown(behaviour, arg1, arg2, arg3, arg4);
             },

@@ -65,7 +65,7 @@
                     <score-icon :score="day_data.score"></score-icon> |
                     [[ day_data.entries.length ]]
                 </div>
-                <feed-entry v-for="(entry, index) in day_data.entries" :is-first="index == 0" :entry="entry" :is-last="index == day_data.entries.length - 1" :filters="filters" @tag-clicked="toggleTag"></feed-entry>
+                <feed-entry v-for="(entry, index) in day_data.entries" :is-first="index == 0" :entry="entry" :is-last="index == day_data.entries.length - 1" :filters="filters" @tag-clicked="toggleTag" @deleted-entry="fetchEntries"></feed-entry>
             </template>
         </div>
 
