@@ -144,3 +144,82 @@ class TestEvent(TestCase):
         for i, row in enumerate(qs):
             self.assertEqual(row['date'], expected[i]['date'])
             self.assertEqual(list(row['entries']), expected[i]['entries'])
+
+    def test_score_by_day(self):
+        now = timezone.now()
+        yesterday = now - datetime.timedelta(days=1)
+        two_days_ago = now - datetime.timedelta(days=2)
+
+        # day 1
+        e1 = factories.Entry(
+            start=now,
+            like=1,
+            importance=2,  # score 2
+        )
+        config = e1.config
+        e2 = factories.Entry(
+            start=now,
+            like=1,
+            importance=1,  # score 1
+            config=config
+        )
+
+        # two days ago
+        e3 = factories.Entry(
+            start=two_days_ago,
+            like=-2,
+            config=config,
+            importance=2,  # score -4
+        )
+        e4 = factories.Entry(
+            start=two_days_ago,
+            like=4,
+            importance=4,  # score 16
+            config=config
+        )
+        qs = list(models.Entry.objects.all().stats(
+                'day', start=two_days_ago, end=now
+            ).order_by('-date'))
+        expected = [
+            {
+                'date': now.date(),
+                'score': 3,
+                'entries': 2,
+            },
+            {
+                'date': two_days_ago.date(),
+                'score': 12,
+                'entries': 2,
+            },
+        ]
+
+        for i, row in enumerate(expected):
+            self.assertEqual(qs[i]['score'], row['score'])
+            self.assertEqual(qs[i]['entries'], row['entries'])
+            self.assertEqual(qs[i]['date'], row['date'])
+
+        qs = list(models.Entry.objects.all().stats(
+                'day', start=two_days_ago, end=now, ordering='-date', fill=True
+            ))
+        expected = [
+            {
+                'date': now.date(),
+                'score': 3,
+                'entries': 2,
+            },
+            {
+                'date': yesterday.date(),
+                'score': 0,
+                'entries': 0,
+            },
+            {
+                'date': two_days_ago.date(),
+                'score': 12,
+                'entries': 2,
+            },
+        ]
+
+        for i, row in enumerate(expected):
+            self.assertEqual(qs[i]['score'], row['score'])
+            self.assertEqual(qs[i]['entries'], row['entries'])
+            self.assertEqual(qs[i]['date'], row['date'])

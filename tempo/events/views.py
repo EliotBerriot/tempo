@@ -1,10 +1,12 @@
 import itertools
+import datetime
 
 from django.views import generic
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core import urlresolvers, paginator
 from django import http
 from django.db.models import Q
+from django.utils import timezone
 
 from taggit.models import Tag
 
@@ -127,6 +129,32 @@ class EntryViewSet(viewsets.ModelViewSet):
                 serializer_class=serializers.EntryNestedSerializer,
             ),
         }
+        return Response(data, status=200)
+
+    @list_route(methods=['GET'])
+    def stats(self, request, *args, **kwargs):
+        qs = self.get_queryset()
+        initial = {
+            'start': timezone.now().date(),
+            'end': (timezone.now() - datetime.timedelta(days=14)).date(),
+            'fill': True,
+            'ordering': 'date',
+        }
+        form = forms.StatsForm(request.GET, initial=initial)
+        if not form.is_valid():
+            return Response({'errors': form.errors.as_json()}, status=400)
+
+        data = {
+            'fill': form.cleaned_data['fill'] or initial['fill'],
+            'start': form.cleaned_data['start'] or initial['start'],
+            'end': form.cleaned_data['end'] or initial['end'],
+            'ordering': form.cleaned_data['ordering'] or initial['ordering'],
+        }
+        data['results'] = qs.stats(
+            'day',
+            **data
+        )
+
         return Response(data, status=200)
 
 

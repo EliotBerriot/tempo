@@ -317,6 +317,80 @@ class TestEvent(APITestCase, TestCase):
             json.loads(response.content.decode('utf-8')),
             json.loads(DjangoJSONEncoder().encode(expected)),
         )
+
+    def test_stats_entries(self):
+        now = timezone.now()
+        yesterday = now - datetime.timedelta(days=1)
+        two_days_ago = now - datetime.timedelta(days=2)
+
+        # day 1
+        e1 = factories.Entry(
+            start=now,
+            like=1,
+            importance=2,  # score 2
+        )
+        config = e1.config
+        e2 = factories.Entry(
+            start=now,
+            like=1,
+            importance=1,  # score 1
+            config=config
+        )
+
+        # two days ago
+        e3 = factories.Entry(
+            start=two_days_ago,
+            like=-2,
+            config=config,
+            importance=2,  # score -4
+        )
+        e4 = factories.Entry(
+            start=two_days_ago,
+            like=4,
+            importance=4,  # score 16
+            config=config
+        )
+
+        expected = {
+            'start': str(two_days_ago.date()),
+            'end': str(now.date()),
+            'fill': True,
+            'ordering': '-date',
+            'results': [
+                {
+                    'date': str(now.date()),
+                    'score': 3,
+                    'entries': 2,
+                },
+                {
+                    'date': str(yesterday.date()),
+                    'score': 0,
+                    'entries': 0,
+                },
+                {
+                    'date': str(two_days_ago.date()),
+                    'score': 12,
+                    'entries': 2,
+                },
+            ]
+        }
+
+        url = self.reverse('api:v1:events:entries-stats')
+        with self.login(config.user):
+            response = self.client.get(
+                url,
+                {
+                    'start': two_days_ago.date(),
+                    'end': now.date(),
+                    'fill': True,
+                    'ordering': '-date',
+                }
+            )
+
+        payload = json.loads(response.content.decode('utf-8'))
+
+        self.assertEqual(payload, expected)
+
     # def test_user_timeline(self):
     #     e1 = factories.Entry()
     #     e2 = factories.Entry(

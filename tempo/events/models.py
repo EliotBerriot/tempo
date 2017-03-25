@@ -141,6 +141,83 @@ class EntryQuerySet(models.QuerySet):
                 final.append(data)
         return final
 
+    def stats(self, period, start, end, fill=False, ordering='date'):
+        periods = {
+            'day': {
+                'field': models.DateField(),
+                'delta': {'days': 1},
+                'type': 'date',
+                'filter': lambda qs: qs.filter(
+                    start__date__gte=start, start__date__lte=end)
+            },
+        }
+        try:
+            p = periods[period]
+        except KeyError:
+            raise ValueError('{} period not supported'.format(period))
+
+        if start >= end:
+            raise ValueError('end must be greater than start')
+
+        qs = p['filter'](self)
+        qs = qs.annotate(
+            date=models.functions.Trunc(
+                'start',
+                kind=period,
+                output_field=p['field']))
+        qs = qs.order_by('date').values('date').annotate(
+            score=models.Sum(models.F('importance') * models.F('like')),
+            entries=models.Count('id'),
+        )
+        if not fill:
+            return qs.order_by(ordering)
+
+        if p['type'] == 'date':
+            try:
+                real_start = start.date()
+            except AttributeError:
+                real_start = start
+            try:
+                real_end = end.date()
+            except AttributeError:
+                real_end = end
+
+        final = []
+        delta = datetime.timedelta(**p['delta'])
+        previous = real_start - delta
+        qs = list(qs)
+        i = 0
+        while True:
+            if previous >= real_end:
+                break
+            default = {
+                'date': previous + delta,
+                'score': 0,
+                'entries': 0,
+            }
+            try:
+                row = qs[i]
+            except IndexError:
+                # empty queryset, we just fill emptyy values
+                final.append(default)
+                previous = default['date']
+                continue
+
+            if default['date'] < row['date']:
+                # we need to fill because next qs row is to far in the future
+                final.append(default)
+                previous = default['date']
+                continue
+
+            # otherwise, we're good to go, we increment the queryset row
+            final.append(row)
+            previous = row['date']
+            i += 1
+
+        if ordering.startswith('-'):
+            final = reversed(final)
+        return final
+
 
 class Entry(models.Model):
     config = models.ForeignKey(

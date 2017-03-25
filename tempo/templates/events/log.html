@@ -5,6 +5,7 @@
     {% include 'components/events/feed-entry.html' %}
     {% include 'components/events/score-icon.html' %}
     {% include 'components/date-range.html' %}
+    {% include 'components/chart/chart-line.html' %}
     {% addtoblock "js_files" %}
         <script src="{% static 'vendor/moment.min.js' %}" crossorigin="anonymous"></script>
         <script src="{% static 'vendor/moment.timezone.js' %}" crossorigin="anonymous"></script>
@@ -50,7 +51,8 @@
                 <button class="ui basic right floated button" @click="setDefaultFilters">
                     <i class="ui remove icon"></i> {% trans 'Reset filters' %}
                 </button>
-
+                <div class="ui hidden divider"></div>
+                <chart-line :data="chartData" :title="'{% trans "Daily score" %}'"></chart-line>
             </div>
         </div>
         <div class="ui centered feed text container ten wide column" id="feed">
@@ -86,7 +88,8 @@
                     start: moment().subtract(14, 'days').format(),
                     end: moment().format(),
                 },
-                defaultFilters: {}
+                defaultFilters: {},
+                stats: {},
             },
             mounted: function () {
                 this.defaultFilters = JSON.parse(JSON.stringify(this.filters));
@@ -100,6 +103,7 @@
                     this.isLoading = true;
                     var vm = this;
                     var filters = this.getFilterPayload()
+                    this.fetchStats();
                     $.ajax({
                         type: 'GET',
                         url: '{% url "api:v1:events:entries-byday" %}',
@@ -110,6 +114,22 @@
                                 vm.isLoading = false;
 
                             }, 250)
+                        }
+                    })
+                },
+                fetchStats: function(){
+                    var vm = this;
+                    var filters = this.getFilterPayload()
+                    $.ajax({
+                        type: 'GET',
+                        url: '{% url "api:v1:events:entries-stats" %}',
+                        data: {
+                            start: filters.start,
+                            end: filters.end,
+                            fill: true
+                        },
+                        success: function(data){
+                            vm.stats = data;
                         }
                     })
                 },
@@ -234,6 +254,45 @@
                     return {
                         start: nextStart,
                         end: nextEnd,
+                    }
+                },
+                chartData: function(){
+                    if (!this.stats.results){
+                        return null;
+                    }
+                    var labels = this.stats.results.map(function(e){
+                        return e.date;
+                    });
+                    var score = this.stats.results.map(function(e){
+                        return e.score;
+                    });
+                    return {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: "{% trans 'Score' %}",
+                                    data: score,
+                                    borderWidth: 1,
+                                    pointBorderWidth: 0,
+                                    pointRadius: 0,
+                                    pointHitRadius: 5,
+                                    backgroundColor: 'rgba(0, 0, 125, 0.2)',
+                                }
+                            ]
+                        },
+                        options: {
+                            scales: {
+                                xAxes: [{
+                                    ticks: {
+                                        autoSkip:true,
+                                    }
+                                }],
+
+                            },
+
+                        },
                     }
                 }
             },

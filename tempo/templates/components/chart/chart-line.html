@@ -1,0 +1,51 @@
+{% load crispy_forms_tags sekizai_tags %}
+
+{% addtoblock "js_files" %}
+    <script src="{% static 'vendor/Chart.bundle.min.js' %}" crossorigin="anonymous"></script>
+{% endaddtoblock %}
+
+{% addtoblock "js_scripts" %}
+<script type="text/x-template" id="chart-line-template">
+    <div>
+        <h3 v-if="!!title">[[title]]</h3>
+        <canvas :width="width" :height="width">
+
+        </canvas>
+    </div>
+
+</script>
+
+<script type="text/javascript">
+Chart.defaults.global.animation = false;
+Vue.component('chart-line', {
+    template: '#chart-line-template',
+    delimiters: ['[[', ']]'],
+    props: {
+        width: {type: Number, default: 400},
+        height: {type: Number, default: 400},
+        data: {type: Object},
+        title: {type: String, required: false},
+    },
+    watch: {
+        data: {
+            handler: function(){
+                if (!this.data.type){
+                    return;
+                }
+                $(this.$el.querySelector('canvas')).replaceWith('<canvas height="' + this.height + '" width="' + this.width + '"></canvas>')
+                var canvas = this.$el.querySelector('canvas');
+                var ctx = canvas.getContext('2d');
+
+                var chart = new Chart(ctx, {
+                    type: this.data.type,
+                    data: this.data.data,
+                    options: this.data.options,
+                });
+            },
+            deep: true,
+        }
+    }
+});
+
+</script>
+{% endaddtoblock %}
