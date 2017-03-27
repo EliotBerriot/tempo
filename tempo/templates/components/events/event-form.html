@@ -2,13 +2,22 @@
 
 {% addtoblock "js_scripts" %}
 <script type="text/x-template" id="event-form-template">
-    <form class="ui form">
-        <div class="required field">
-            <label>{% trans 'Name' %}</label>
-            <input type="text" name="name" v-model="name" />
+    <div class="ui stackable grid">
+        <form class="ui form ten wide column">
+            <div class="required field">
+                <label>{% trans 'Name' %}</label>
+                <input type="text" name="name" v-model="name" />
+            </div>
+            <button class="ui button">Submit</button>
+        </form>
+        <div class="ui six wide column">
+            <h3>{% trans 'Help' %}</h3>
+            <p>{% trans "Events represents things that happen regularly and you and want to track in your life" %}</p>
+            <p>{% trans 'Once you created some events, you can add related entries using the entry form.' %}</p>
+            <p>{% trans "Good events are reusable and generic, such as 'Eat', 'Sleep' or 'See a movie'." %}</p>
+            <p>{% trans "Bad events are either too vague or too detailed like 'Did something' or 'Listen to rock music'." %}</p>
         </div>
-        <button class="ui button">Submit</button>
-    </form>
+    </div>
 </script>
 
 <script type="text/javascript">

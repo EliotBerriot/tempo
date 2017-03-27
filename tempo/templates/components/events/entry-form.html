@@ -8,67 +8,78 @@
 
 {% addtoblock "js_scripts" %}
 <script type="text/x-template" id="entry-form-template">
-    <form class="ui form">
-        <div class="ui two fields">
-            <div class="required field">
-                <template v-if="create">
-                    <label>{% trans 'Event' %}</label>
-                    <search-input ref="configSelect" :config="entry.config" @value-changed="configChanged" :url="configSearchUrl" :autofocus="true" name="config"></search-input>
-                </template>
-                <template v-else>
-                    <label>{% trans 'Event' %}</label>
-                    <p>[[ entry.config.event.verbose_name ]]</p>
-                </template>
-            </div>
-            <div class="field">
-                <label>{% trans 'Tags' %}</label>
-                <tags-input ref="tagsSelect" @value-changed="tagsChanged" :url="tagsListUrl" name="tags" :tags="entry.tags"></tags-input>
-            </div>
-        </div>
-        <div class="ui two fields">
-            <div class="required field">
-                <label>{% trans 'Appreciation' %}</label>
-                <select name="like" v-model="entry.like">
-                  {% for value, display in Entry.LIKE_CHOICES %}
-                    <option value="{{ value }}">{{ display }}</option>
-                  {% endfor %}
-                </select>
-            </div>
-            <div class="required field">
-                <label>{% trans 'Importance' %}</label>
-                <select name="importance" v-model="entry.importance">
-                  {% for value, display in Entry.IMPORTANCE_CHOICES %}
-                    <option value="{{ value }}">{{ display }}</option>
-                  {% endfor %}
-                </select>
-            </div>
-
-        </div>
-        <div class="field">
-            <datetime-calendar @start-changed="startChanged" @end-changed="endChanged"  :start="entry.start" :end="entry.end"></datetime-calendar>
-        </div>
-        <div class="field">
-            <label>{% trans 'Comment' %}</label>
-            <textarea name="comment" v-model="entry.comment" placeholder="input your comment here..."></textarea>
-        </div>
-        <div class="ui two fields">
-            <div class="field">
-                <label>{% trans 'URL' %}</label>
-                <input name="comment" v-model="entry.detail_url" placeholder="An optional detail url for the entry">
-            </div>
-            <div class="field">
-                <div class="ui toggle checkbox">
-                    <p><strong><i class="ui privacy icon"></i> {% trans 'Visibility' %}</strong></p>
-                    <input type="checkbox" id="public-checkbox" v-model="entry.is_public">
-                    <label for="public-checkbox">{% trans 'Make this entry publicly viewable' %}</label>
+    <div class="ui stackable grid">
+        <form class="ui ten wide column form">
+            <div class="ui two fields">
+                <div class="required field">
+                    <template v-if="create">
+                        <label>{% trans 'Event' %}</label>
+                        <search-input ref="configSelect" :config="entry.config" @value-changed="configChanged" :url="configSearchUrl" :autofocus="true" name="config"></search-input>
+                    </template>
+                    <template v-else>
+                        <label>{% trans 'Event' %}</label>
+                        <p>[[ entry.config.event.verbose_name ]]</p>
+                    </template>
+                </div>
+                <div class="field">
+                    <label>{% trans 'Tags' %}</label>
+                    <tags-input ref="tagsSelect" @value-changed="tagsChanged" :url="tagsListUrl" name="tags" :tags="entry.tags"></tags-input>
                 </div>
             </div>
+            <div class="ui two fields">
+                <div class="required field">
+                    <label>{% trans 'Appreciation' %}</label>
+                    <select name="like" v-model="entry.like">
+                      {% for value, display in Entry.LIKE_CHOICES %}
+                        <option value="{{ value }}">{{ display }}</option>
+                      {% endfor %}
+                    </select>
+                </div>
+                <div class="required field">
+                    <label>{% trans 'Importance' %}</label>
+                    <select name="importance" v-model="entry.importance">
+                      {% for value, display in Entry.IMPORTANCE_CHOICES %}
+                        <option value="{{ value }}">{{ display }}</option>
+                      {% endfor %}
+                    </select>
+                </div>
+
+            </div>
+            <div class="field">
+                <datetime-calendar @start-changed="startChanged" @end-changed="endChanged"  :start="entry.start" :end="entry.end"></datetime-calendar>
+            </div>
+            <div class="field">
+                <label>{% trans 'Comment' %}</label>
+                <textarea name="comment" v-model="entry.comment" placeholder="input your comment here..."></textarea>
+                <small class="helper">{% blocktrans with markdown_url="https://guides.github.com/features/mastering-markdown/" %}Protip: style your comment using <a href="{{ markdown_url }}" target="_blank">Markdown</a> and quickly add tags using #hashtag notation{% endblocktrans %}
+            </div>
+            <div class="ui two fields">
+                <div class="field">
+                    <label>{% trans 'URL' %}</label>
+                    <input name="comment" v-model="entry.detail_url" placeholder="An optional detail url for the entry">
+                </div>
+                <div class="field">
+                    <div class="ui toggle checkbox">
+                        <p><strong><i class="ui privacy icon"></i> {% trans 'Visibility' %}</strong></p>
+                        <input type="checkbox" id="public-checkbox" v-model="entry.is_public">
+                        <label for="public-checkbox">{% trans 'Make this entry publicly viewable' %}</label>
+                    </div>
+                </div>
+            </div>
+            <button class="ui button">{% trans 'Submit' %}</button>
+            <span v-if="score > 0" class="green text score"><i class="smile icon"></i> +[[ score ]]</span>
+            <span v-if="score == 0" class="score"><i class="meh icon"></i> 0</span>
+            <span v-if="score < 0" class="red text score"><i class="frown icon"></i> [[ score ]]</span>
+        </form>
+        <div v-if="create" class="ui six wide column">
+            <h3>{% trans 'Help' %}</h3>
+            <p>{% trans "Entries represents detailed occurences of events. If you have created a 'Eat' event, an entry could be created to record your last dinner at a restaurant or your breakfast." %}</p>
+            <p>{% trans 'You can record as many entries as you want for the same event.' %}</p>
+            <p>{% trans 'Not finding the right event? You can create one.' %} <a href="" @click.prevent="selectEventForm">{% trans 'Create an event' %}</a></p>
+
+
         </div>
-        <button class="ui button">{% trans 'Submit' %}</button>
-        <span v-if="score > 0" class="green text score"><i class="smile icon"></i> +[[ score ]]</span>
-        <span v-if="score == 0" class="score"><i class="meh icon"></i> 0</span>
-        <span v-if="score < 0" class="red text score"><i class="frown icon"></i> [[ score ]]</span>
-    </form>
+    </div>
 
 </script>
 <script type="text/javascript">
@@ -141,6 +152,9 @@
             },
             selectConfig: function(data){
                 this.$refs.configSelect.update(data)
+            },
+            selectEventForm: function(data){
+                $('#entry-form .item').tab('change tab', 'event');
             },
             submit: function(){
                 var vm = this;
