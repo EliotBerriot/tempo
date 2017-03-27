@@ -53,7 +53,8 @@ class TagsFilter(django_filters.CharFilter):
 
         tags = value.split(',')
         for tag in tags:
-            qs = qs.filter(tags__slug__iexact=tag)
+            q = Q(tags__slug__iexact=tag) | Q(tags__name__iexact=tag)
+            qs = qs.filter(q)
 
         return qs.distinct()
 
