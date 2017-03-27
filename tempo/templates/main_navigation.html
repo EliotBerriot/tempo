@@ -2,10 +2,11 @@
 <div class="ui large top menu">
     <nav class="ui container">
       <a class="item" href="{% url 'home' %}">Tempo</a>
-      
+
 
       <div class="right menu">
         {% if request.user.is_authenticated %}
+            <a class="item" href="{% url 'events:entries:create' %}">{% trans "Add entry" %}</a>
             <a class="item" href="{% url 'events:timeline' %}">{% trans "Timeline" %}</a>
             <a class="item" href="{% url 'users:detail' request.user.username  %}">{% trans "My Profile" %}</a>
             <a class="item" href="{% url 'account_logout' %}">{% trans "Sign Out" %}</a>

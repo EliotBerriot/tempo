@@ -13,7 +13,7 @@
     <div class="ui stackable grid container" id="feed-wrapper">
         <div class="ui six wide column">
             <div class="ui hidden divider"></div>
-            <div class="ui segment sticky">
+            <div class="ui segment">
                 <h4>{% trans 'Filter entries' %}</h4>
                 <div class="ui hidden divider"></div>
                 <form class="ui form" @submit.prevent="fetchEntries">
@@ -47,7 +47,6 @@
                 </form>
                 <div class="ui divider"></div>
 
-                <a class="ui basic positive button" href="{% url 'events:entries:create' %}">{% trans 'Add an entry' %} <i class="i right arrow icon"></i></a>
                 <button class="ui basic right floated button" @click="setDefaultFilters">
                     <i class="ui remove icon"></i> {% trans 'Reset filters' %}
                 </button>
