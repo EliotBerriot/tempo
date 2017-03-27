@@ -90,6 +90,7 @@ class EntrySerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags', [])
         instance = super().create(validated_data)
         instance.tags.set(*tags, clear=True)
+        instance.set_tags()
         return instance
 
     def get_score(self, obj):
