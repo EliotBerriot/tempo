@@ -22,6 +22,7 @@ from . import forms
 from . import models
 from . import serializers
 from . import filters
+from . import suggestions
 
 
 class Log(LoginRequiredMixin, generic.TemplateView):
@@ -95,7 +96,7 @@ class EntryViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return models.Entry.objects.filter(
             config__user=self.request.user
-        ).prefetch_related('tags')
+        ).select_related('config__event').prefetch_related('tags')
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
@@ -131,6 +132,24 @@ class EntryViewSet(viewsets.ModelViewSet):
             ),
         }
         return Response(data, status=200)
+
+    @list_route(methods=['GET'])
+    def suggestions(self, request, *args, **kwargs):
+        form = forms.EntrySuggestionForm(request.GET)
+        if not form.is_valid():
+            return Response({'errors': form.errors.as_json()}, status=400)
+
+        qs = self.get_queryset()
+        ref = form.cleaned_data.get('date') or timezone.now()
+        results = suggestions.rank_by_closest(qs, 'start', ref)
+
+        results = [
+            {
+                'score': score,
+                'entry': serializers.EntryNestedSerializer(entry).data}
+            for score, entry in results
+        ][:10]
+        return Response(results, status=200)
 
     @list_route(methods=['GET'])
     def stats(self, request, *args, **kwargs):

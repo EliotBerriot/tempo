@@ -265,6 +265,9 @@ class Entry(models.Model):
         regex = re.compile(r"#(\w+)")
         return set(sorted(regex.findall(self.comment or '')))
 
+    def __str__(self):
+        return '{} - {}'.format(self.config, self.start)
+
     def get_score(self):
         try:
             return self._score

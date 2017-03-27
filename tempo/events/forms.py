@@ -44,6 +44,10 @@ class ByDayForm(forms.Form):
             pass
 
 
+class EntrySuggestionForm(forms.Form):
+    date = forms.DateTimeField(required=False)
+
+
 class StatsForm(forms.Form):
     start = forms.DateField(required=False)
     end = forms.DateField(required=False)

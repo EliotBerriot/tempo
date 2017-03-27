@@ -1,0 +1,65 @@
+{% load crispy_forms_tags sekizai_tags %}
+
+{% addtoblock "js_scripts" %}
+<script type="text/x-template" id="entry-suggestions-template">
+    <div v-if="suggestions.length > 0">
+        <small>{% trans 'Suggestions' %}</small>
+        <div class="ui link list">
+            <a class="item" v-for="s in uniqueSuggestions.slice(0, 3)" @click="$emit('suggestion-selected', s)">[[ s.config.event.verbose_name]]</a>
+        </div>
+    </div>
+
+</script>
+
+<script type="text/javascript">
+Vue.component('entry-suggestions', {
+    template: '#entry-suggestions-template',
+    delimiters: ['[[', ']]'],
+    props: ['dateRef'],
+    data: function(){
+        return {
+            suggestions: []
+        }
+    },
+    mounted: function(){
+        this.fetchSuggestions();
+    },
+    computed: {
+        realDateRef: function(){
+            return this.dateRef.format("YYYY-MM-DD HH:mm:ss");
+        },
+        uniqueSuggestions: function(){
+            var unique = {};
+            var distinct = [];
+            for( var i in this.suggestions ){
+                var entry = this.suggestions[i].entry;
+                if( typeof(unique[entry.config.id]) == "undefined"){
+                    distinct.push(entry);
+                }
+                unique[entry.config.id] = 0;
+            }
+            return distinct
+        }
+    },
+    methods: {
+        fetchSuggestions: function(){
+            var vm = this;
+            $.ajax({
+                url: "{% url 'api:v1:events:entries-suggestions' %}",
+                type: 'GET',
+                data: {'date': this.realDateRef},
+                success: function(data){
+                    vm.suggestions = data;
+                }
+            })
+        }
+    },
+    watch: {
+        realDateRef: function(){
+            this.fetchSuggestions();
+        }
+    }
+});
+
+</script>
+{% endaddtoblock %}

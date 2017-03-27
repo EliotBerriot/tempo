@@ -5,6 +5,7 @@
 {% include 'components/events/tags-input.html' %}
 {% include 'components/events/datetime-calendar.html' %}
 {% include 'components/events/event-form.html' %}
+{% include 'components/events/entry-suggestions.html' %}
 
 {% addtoblock "js_scripts" %}
 <script type="text/x-template" id="entry-form-template">
@@ -14,7 +15,8 @@
                 <div class="required field">
                     <template v-if="create">
                         <label>{% trans 'Event' %}</label>
-                        <search-input ref="configSelect" :config="entry.config" @value-changed="configChanged" :url="configSearchUrl" :autofocus="true" name="config"></search-input>
+                        <search-input ref="configSelect" :config="entry.config" @value-changed="configChanged" :url="configSearchUrl" :autofocus="false" name="config"></search-input>
+                        <entry-suggestions :date-ref="suggestionDateRef" @suggestion-selected="selectEventSuggestion"></entry-suggestions>
                     </template>
                     <template v-else>
                         <label>{% trans 'Event' %}</label>
@@ -51,7 +53,7 @@
             <div class="field">
                 <label>{% trans 'Comment' %}</label>
                 <textarea name="comment" v-model="entry.comment" placeholder="input your comment here..."></textarea>
-                <small class="helper">{% blocktrans with markdown_url="https://guides.github.com/features/mastering-markdown/" %}Protip: style your comment using <a href="{{ markdown_url }}" target="_blank">Markdown</a> and quickly add tags using #hashtag notation{% endblocktrans %}
+                <small class="helper">{% blocktrans with markdown_url="https://guides.github.com/features/mastering-markdown/" %}Protip: style your comment using <a href="{{ markdown_url }}" target="_blank">Markdown</a> and quickly add tags using #hashtag notation{% endblocktrans %}</small>
             </div>
             <div class="ui two fields">
                 <div class="field">
@@ -150,8 +152,10 @@
                 var vm = this;
                 $(vm.$refs.configModal.$el).modal('show');
             },
-            selectConfig: function(data){
-                this.$refs.configSelect.update(data)
+            selectEventSuggestion: function(entry){
+                console.log(entry.config)
+                this.$refs.configSelect.behaviour('set value', entry.config.id);
+                this.$refs.configSelect.behaviour('set text', entry.config.event.verbose_name);
             },
             selectEventForm: function(data){
                 $('#entry-form .item').tab('change tab', 'event');
@@ -206,6 +210,12 @@
             },
             create: function(){
                 return !this.entry.id;
+            },
+            suggestionDateRef: function(){
+                if (!!this.entry.start){
+                    return moment(this.entry.start).tz(CONFIG.timezone);
+                }
+                return moment().tz(CONFIG.timezone);
             }
         }
 

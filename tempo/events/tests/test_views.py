@@ -1,4 +1,5 @@
 import json
+import unittest
 import datetime
 from django.core.serializers.json import DjangoJSONEncoder
 from rest_framework.test import APITestCase
@@ -9,6 +10,7 @@ from django.forms import ValidationError
 from tempo.events import models
 from . import factories
 from .. import serializers
+from .. import suggestions
 
 
 class TestEvent(APITestCase, TestCase):
@@ -419,6 +421,58 @@ class TestEvent(APITestCase, TestCase):
 
         self.assertEqual(payload, expected)
 
+    def test_user_can_get_entry_suggestions_via_api(self):
+        now = timezone.now()
+        thirty_minutes_ago = now - datetime.timedelta(minutes=30)
+        two_hours_ago = now - datetime.timedelta(hours=2)
+
+        e1 = factories.Entry(
+            start=now,
+        )
+        e2 = factories.Entry(
+            start=thirty_minutes_ago,
+            config__user=e1.config.user
+        )
+        e3 = factories.Entry(
+            start=two_hours_ago,
+            config__user=e1.config.user
+        )
+
+        url = self.reverse('api:v1:events:entries-suggestions')
+        with self.login(e1.config.user):
+            response = self.client.get(
+                url,
+                {
+                    'date': thirty_minutes_ago.replace(tzinfo=None)
+                }
+            )
+
+        s = suggestions.rank_by_closest(
+            models.Entry.objects.all(), 'start', thirty_minutes_ago)
+        expected = [
+            {
+                'score': s[0][0],
+                'entry': serializers.EntryNestedSerializer(
+                    s[0][1]
+                ).data
+            },
+            {
+                'score': s[1][0],
+                'entry': serializers.EntryNestedSerializer(
+                    s[1][1]
+                ).data
+            },
+            {
+                'score': s[2][0],
+                'entry': serializers.EntryNestedSerializer(
+                    s[2][1]
+                ).data
+            },
+        ]
+        self.assertEqual(
+            json.loads(response.content.decode('utf-8')),
+            json.loads(DjangoJSONEncoder().encode(expected)),
+        )
     # def test_user_timeline(self):
     #     e1 = factories.Entry()
     #     e2 = factories.Entry(
