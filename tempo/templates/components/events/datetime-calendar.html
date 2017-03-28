@@ -5,24 +5,56 @@
 {% endaddtoblock %}
 {% addtoblock "js_scripts" %}
 <script type="text/x-template" id="datetime-calendar-template">
-    <div class="two fields">
-      <div class="required field">
-        <label>Start</label>
-        <div class="ui calendar rangestart">
-          <div class="ui input left icon">
-            <i class="calendar icon"></i>
-            <input type="text" name="start" placeholder="Start">
+    <div>
+        <div class="two fields">
+          <div class="required field">
+            <label>{% trans 'Start' %}</label>
+            <div class="ui calendar rangestart">
+              <div class="ui input left icon">
+                <i class="calendar icon"></i>
+                <input type="text" name="start" placeholder="Start">
+              </div>
+            </div>
           </div>
+          <div class="field">
+            <label>{% trans 'End' %}</label>
+            <div class="ui calendar rangeend">
+              <div class="ui input left icon">
+                <i class="calendar icon"></i>
+                <input type="text" name="end" placeholder="End">
+              </div>
+            </div>
         </div>
       </div>
-      <div class="field">
-        <label>End</label>
-        <div class="ui calendar rangeend">
-          <div class="ui input left icon">
-            <i class="calendar icon"></i>
-            <input type="text" name="end" placeholder="End">
+      <div class="ui stackable two column grid">
+          <div class="ui column">
+              <div class="ui stackable two column grid">
+                  <div class="column">
+                      <i @click="incrementStartInput(-60)" class="circular minus tiny link icon"></i>
+                      {% trans '1 hour' %}
+                      <i @click="incrementStartInput(60)" class="circular plus tiny link icon"></i>
+                  </div>
+                  <div class="column">
+                      <i @click="incrementStartInput(-5)" class="circular minus tiny link icon"></i>
+                      {% trans '5 minutes' %}
+                      <i @click="incrementStartInput(5)" class="circular plus tiny link icon"></i>
+                  </div>
+              </div>
           </div>
-        </div>
+
+          <div class="ui column">
+              <strong>{% trans 'Duration' %}</strong>
+              <div class="two fields">
+                <div class="field">
+                    <label>{% trans 'Hours' %}</label>
+                    <input ref="hoursInput" type="number" min="0" :value="currentDuration.hours" @change="updateHours" />
+                </div>
+                <div class="field">
+                    <label>{% trans 'Minutes' %}</label>
+                    <input ref="minutesInput" type="number" min="0" :value="currentDuration.minutes" step="5" max="60" @change="updateMinutes" />
+                </div>
+              </div>
+          </div>
       </div>
     </div>
 </script>
@@ -34,6 +66,16 @@ Vue.component('datetime-calendar', {
         start: {required: false},
         end: {required: false},
     },
+    data: function(){
+        return {
+            currentDuration: {
+                hours: 0,
+                minutes: 0,
+            },
+            inputStart: this.start,
+            inputEnd: this.end,
+        }
+    },
     mounted: function () {
         var vm = this
         let start = $(this.$el).find('.rangestart')
@@ -43,27 +85,114 @@ Vue.component('datetime-calendar', {
             endCalendar: end,
             maxDate: new Date(),
             onChange: function(date, text, mode) {
-                vm.$emit('start-changed', date)
+                 if (moment(date).format() != moment(vm.inputStart).format()){
+                     vm.inputStart = moment(date);
+                 }
             },
         });
-        if (!!this.start){
-            start.calendar('set date', moment(this.start).tz(CONFIG.timezone).format());
-        } else {
-            start.calendar('set date', moment(new Date()).tz(CONFIG.timezone).format());
-        }
         end.calendar({
             type: 'datetime',
             startCalendar: start,
             maxDate: new Date(),
             onChange: function(date, text, mode) {
-                vm.$emit('end-changed', date)
+                if (moment(date).format() != moment(vm.inputEnd).format()){
+                    vm.inputEnd = moment(date);
+                }
             },
         });
+        if (!!this.start){
+            this.inputStart = moment(this.start)
+        } else {
+            this.inputStart = moment();
+        }
         if (!!this.end){
-            end.calendar('set date', moment(this.end).tz(CONFIG.timezone).format())
+            this.inputEnd = moment(this.end);
         }
 
     },
+    methods: {
+        updateDuration: function(duration, fromDuration){
+
+            if (!!fromDuration){
+                this.setDateFromDuration(duration)
+            }
+        },
+        updateHours: function(e){
+            this.updateDuration({
+                hours: parseInt(e.target.value),
+                minutes: this.currentDuration.minutes,
+            }, true)
+        },
+        updateMinutes: function(e){
+            this.updateDuration({
+                minutes: parseInt(e.target.value),
+                hours: this.currentDuration.hours,
+            }, true)
+        },
+        setDateFromDuration: function(d){
+            var duration = moment.duration(d)
+            var newEnd = moment(this.inputStart).add(duration)
+            if (moment().isBefore(newEnd)){
+                // cannot set date from duration as end is in the past
+                this.resetDuration();
+                return;
+            }
+            this.inputEnd = newEnd;
+            this.currentDuration = duration;
+        },
+        resetDuration: function(){
+            this.$refs.hoursInput.value = this.currentDuration.hours;
+            this.$refs.minutesInput.value = this.currentDuration.minutes;
+        },
+        updateDurationFromDate: function(){
+            if (!!this.inputEnd & !!this.inputStart){
+                var delta = moment.duration(this.inputEnd.diff(this.inputStart));
+                var minutes = delta.asMinutes();
+                var hours = minutes / 60 | 0
+                if (hours > 0){
+                    this.currentDuration.hours = hours;
+                    this.currentDuration.minutes = minutes - 60 * hours;
+                } else {
+                    this.currentDuration.hours = 0;
+                    this.currentDuration.minutes = minutes;
+                }
+                this.resetDuration();
+            }
+        },
+        incrementStartInput: function(d){
+            var delta = moment.duration(d, 'minutes');
+            var newStart = moment(this.inputStart).add(delta);
+            if (moment().isBefore(newStart)){
+                // cannot set start date after now
+                return;
+            }
+            this.inputStart = newStart;
+        },
+    },
+    computed: {
+        currentStart: function(){
+            return moment(this.inputStart);
+        },
+        currentEnd: function(){
+            return moment(this.inputEnd);
+        },
+    },
+    watch: {
+        currentStart: function(){
+            this.$emit('start-changed', this.currentStart)
+        },
+        currentEnd: function(){
+            this.$emit('end-changed', this.currentEnd)
+        },
+        inputStart: function(){
+            $(this.$el).find('.rangestart').calendar('set date', moment(this.inputStart).tz(CONFIG.timezone).format());
+            this.updateDurationFromDate();
+        },
+        inputEnd: function(){
+            $(this.$el).find('.rangeend').calendar('set date', moment(this.inputEnd).tz(CONFIG.timezone).format());
+            this.updateDurationFromDate();
+        },
+    }
 });
 
 </script>

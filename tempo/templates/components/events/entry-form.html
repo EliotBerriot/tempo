@@ -10,13 +10,14 @@
 {% addtoblock "js_scripts" %}
 <script type="text/x-template" id="entry-form-template">
     <div class="ui stackable grid">
-        <form class="ui ten wide column form">
+        <form :class="formClasses">
+            <h5 class="ui grey header"><i class="tiny tag icon"></i> {% trans 'Classification' %}</h5>
+            <div class="ui divider"></div>
             <div class="ui two fields">
                 <div class="required field">
                     <template v-if="create">
                         <label>{% trans 'Event' %}</label>
                         <search-input ref="configSelect" :config="entry.config" @value-changed="configChanged" :url="configSearchUrl" :autofocus="false" name="config"></search-input>
-                        <entry-suggestions :date-ref="suggestionDateRef" @suggestion-selected="selectEventSuggestion"></entry-suggestions>
                     </template>
                     <template v-else>
                         <label>{% trans 'Event' %}</label>
@@ -28,6 +29,9 @@
                     <tags-input ref="tagsSelect" @value-changed="tagsChanged" :url="tagsListUrl" name="tags" :tags="entry.tags"></tags-input>
                 </div>
             </div>
+            <entry-suggestions v-if="create" :date-ref="suggestionDateRef" @suggestion-selected="selectEventSuggestion"></entry-suggestions>
+            <h5 class="ui grey header"><i class="tiny smile icon"></i> {% trans 'Score' %}</h5>
+            <div class="ui divider"></div>
             <div class="ui three fields">
                 <div class="required field">
                     <label>{% trans 'Appreciation' %}</label>
@@ -54,9 +58,13 @@
                 </div>
 
             </div>
+            <h5 class="ui grey header"><i class="tiny calendar icon"></i> {% trans 'Time tracking' %}</h5>
+            <div class="ui divider"></div>
             <div class="field">
                 <datetime-calendar @start-changed="startChanged" @end-changed="endChanged"  :start="entry.start" :end="entry.end"></datetime-calendar>
             </div>
+            <h5 class="ui grey header"><i class="tiny write icon"></i> {% trans 'Additional data' %}</h5>
+            <div class="ui divider"></div>
             <div class="field">
                 <label>{% trans 'Comment' %}</label>
                 <textarea name="comment" v-model="entry.comment" placeholder="input your comment here..."></textarea>
@@ -77,7 +85,7 @@
             </div>
             <button class="ui button">{% trans 'Submit' %}</button>
         </form>
-        <div v-if="create" class="ui six wide column">
+        <div v-if="create" class="ui five wide column">
             <h3>{% trans 'Help' %}</h3>
             <p>{% trans "Entries represents detailed occurences of events. If you have created a 'Eat' event, an entry could be created to record your last dinner at a restaurant or your breakfast." %}</p>
             <p>{% trans 'You can record as many entries as you want for the same event.' %}</p>
@@ -220,9 +228,17 @@
                     return moment(this.entry.start).tz(CONFIG.timezone);
                 }
                 return moment().tz(CONFIG.timezone);
+            },
+            formClasses: function(){
+                return {
+                    ui: true,
+                    eleven: this.create,
+                    wide: this.create,
+                    column: true,
+                    form: true,
+                }
             }
         }
-
     });
 </script>
 
