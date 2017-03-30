@@ -70,7 +70,6 @@ class EntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Entry
         fields = (
-            'id',
             'uuid',
             'start',
             'end',
@@ -97,7 +96,8 @@ class EntrySerializer(serializers.ModelSerializer):
         return obj.get_score()
 
     def get_update_url(self, obj):
-        return reverse('api:v1:events:entries-detail', kwargs={'pk': obj.pk})
+        return reverse('api:v1:events:entries-detail',
+                       kwargs={'uuid': str(obj.uuid)})
 
     def get_comment_rendered(self, obj):
         return obj.comment_rendered

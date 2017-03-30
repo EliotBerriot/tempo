@@ -46,7 +46,7 @@ class TestEvent(APITestCase, TestCase):
     def test_can_delete_entry_from_api(self):
         entry = factories.Entry()
         url = self.reverse(
-            'api:v1:events:entries-detail', pk=entry.pk)
+            'api:v1:events:entries-detail', uuid=str(entry.uuid))
         with self.login(entry.config.user):
             response = self.client.delete(url)
         with self.assertRaises(models.Entry.DoesNotExist):
@@ -63,7 +63,7 @@ class TestEvent(APITestCase, TestCase):
             'tags': ['python', 'django'],
         }
         url = self.reverse(
-            'api:v1:events:entries-detail', pk=entry.pk)
+            'api:v1:events:entries-detail', uuid=str(entry.uuid))
         with self.login(user):
             response = self.client.put(
                 url,

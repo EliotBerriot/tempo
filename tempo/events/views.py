@@ -92,6 +92,8 @@ class Search(APIView):
 
 class EntryViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.EntrySerializer
+    lookup_field = 'uuid'
+    lookup_value_regex = '[0-9a-f-]{36}'
 
     def get_queryset(self):
         return models.Entry.objects.filter(
