@@ -55,3 +55,4 @@ djangorestframework
 django-sekizai
 markdown
 django-filter
+pyparsing
