@@ -8,11 +8,11 @@ from tempo.events import models
 class TestQueryLanguage(TestCase):
 
     def test_column(self):
-        q = 'test'
+        q = 'test_column'
 
         result = language.column.parseString(q)
 
-        self.assertEqual(result['column'], 'test')
+        self.assertEqual(result['column'], 'test_column')
 
     def test_function(self):
         q = 'COUNT'
@@ -85,7 +85,16 @@ class TestQueryLanguage(TestCase):
 
         self.assertEqual(result['source'], 'entries')
 
-    def test_select(self):
+    def test_single_select(self):
+        q = 'SELECT hello FROM entries'
+
+        result = language.query.parseString(q)
+
+        self.assertEqual(result['statement'], 'SELECT')
+        self.assertEqual(result['source'], 'entries')
+        self.assertEqual(result['exprs'][0]['full_expr']['expr']['column'], 'hello')
+
+    def test_multiple_select(self):
         q = 'SELECT COUNT(score) as t, hello FROM entries'
 
         result = language.query.parseString(q)

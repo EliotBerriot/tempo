@@ -2,7 +2,7 @@ import pyparsing as pp
 
 
 LPAR, RPAR = map(pp.Suppress, '()')
-column = pp.Word(pp.alphanums)('column')
+column = pp.Word(pp.alphas, pp.alphanums+"_")('column')
 function = (
     pp.CaselessKeyword('COUNT')
 )('function')
@@ -20,7 +20,7 @@ full_expr = pp.Group(expr)('expr') + pp.Optional(alias_expr)
 
 exprs = pp.delimitedList(pp.Group(full_expr('full_expr')))
 
-SOURCES = pp.oneOf('entries tags envents')
+SOURCES = pp.oneOf('entries tags events')
 
 source = pp.Suppress(pp.CaselessKeyword('FROM')) + SOURCES('source')
 

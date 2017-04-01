@@ -56,3 +56,4 @@ django-sekizai
 markdown
 django-filter
 pyparsing
+persisting-theory
